@@ -1,0 +1,54 @@
+apply plugin: 'com.android.application'
+
+android {
+    signingConfigs {
+        config {
+            keyAlias 'androidappsign'
+            keyPassword 's4r4ngh3y0'
+            storeFile file('/Users/Robert/Documents/Privat/keystrore/android.jks')
+            storePassword '#berlin3R'
+        }
+    }
+    compileSdkVersion 26
+    buildToolsVersion "26.0.2"
+    defaultConfig {
+        applicationId "com.example.robert.kitafinder"
+        minSdkVersion 19
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        vectorDrawables.useSupportLibrary = true
+        multiDexEnabled true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.config
+        }
+        debug {
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:26.1.0'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile 'com.android.support:support-v4:26.1.0'
+    compile 'com.android.support:recyclerview-v7:26.1.0'
+    compile 'com.android.support:design:26.1.0'
+    compile 'com.android.support:support-vector-drawable:26.1.0'
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:multidex:1.0.2'
+    compile files('libs/opencsv-4.0.jar')
+    compile files('libs/commons-lang3-3.6.jar')
+    compile 'com.google.android.gms:play-services:11.8.0'
+    compile 'com.github.pchmn:MaterialChipsInput:1.0.8'
+    compile 'org.greenrobot:eventbus:3.1.1'
+    compile 'com.google.maps.android:android-maps-utils:0.5+'
+}

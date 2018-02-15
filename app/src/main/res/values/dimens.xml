@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="app_bar_height">200dp</dimen>
+    <dimen name="item_width">200dp</dimen>
+    <dimen name="bottom_tool_bar_height">48dp</dimen>
+    <dimen name="action_bar_size">70dp</dimen>
+
+
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="parent_horizontal_padding">24dp</dimen>
+    <dimen name="parent_vertical_padding">36dp</dimen>
+
+    <dimen name="element_horizontal_margin">4dp</dimen>
+    <dimen name="element_vertical_margin">8dp</dimen>
+
+    <dimen name="element_horizontal_padding">4dp</dimen>
+    <dimen name="element_vertical_padding">8dp</dimen>
+
+    <dimen name="list_item_vertical_padding">16dp</dimen>
+
+    <dimen name="lat_long_text_size">16sp</dimen>
+    <dimen name="text_margin">24dp</dimen>
+
+    <dimen name="fav_button_margin">8dp</dimen>
+
+    <dimen name="bullet_point_vertical_rows">12dp</dimen>
+    <dimen name="bullet_points_horizontal_column">16dp</dimen>
+    <dimen name="bullet_points_vertical_paragraph">36dp</dimen>
+
+    <dimen name="chip_padding">4dp</dimen>
+    <dimen name="chip_text_size">12sp</dimen>
+
+
+</resources>

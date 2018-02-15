@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/kita_list_item"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:paddingStart="@dimen/parent_horizontal_padding"
+    android:paddingEnd="@dimen/parent_horizontal_padding"
+    android:paddingBottom="@dimen/list_item_vertical_padding">
+
+    <TextView
+        android:id="@+id/kita_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="0dp"
+        android:text="Kita Sonnenschein"
+        android:textAppearance="?attr/textAppearanceListItem"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/kita_öffnungszeiten"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/kita_fav"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@null"
+        android:padding="12dp"
+        android:src="@drawable/ic_favorite_border_black_24dp"
+        app:layout_constraintBottom_toBottomOf="@+id/kita_name"
+        app:layout_constraintRight_toLeftOf="@+id/kita_distanz"
+        app:layout_constraintTop_toTopOf="@+id/kita_name" />
+
+    <TextView
+        android:id="@+id/kita_distanz"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        android:text="3,2 km"
+        android:textAppearance="?attr/textAppearanceListItem"
+        app:layout_constraintBottom_toBottomOf="@+id/kita_fav"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/kita_fav" />
+
+    <TextView
+        android:id="@+id/kita_öffnungszeiten"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/rounded_corner_list"
+        android:padding="@dimen/chip_padding"
+        android:text="07:30-17:30 Uhr"
+        android:textAlignment="center"
+        android:textAppearance="?attr/textAppearanceListItem"
+        android:textSize="@dimen/chip_text_size"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintWidth_min="120dp" />
+
+    <TextView
+        android:id="@+id/kita_aufnahmealter"
+        android:layout_width="wrap_content"
+        app:layout_constraintWidth_min="90dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/rounded_corner_list"
+        android:padding="@dimen/chip_padding"
+        android:layout_marginStart="@dimen/element_horizontal_margin"
+        android:text="ab 12 Mon."
+        android:textAlignment="center"
+        android:textAppearance="?attr/textAppearanceListItem"
+        android:textSize="@dimen/chip_text_size"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/kita_öffnungszeiten" />
+
+    <TextView
+        android:id="@+id/kita_sprache"
+        android:layout_width="wrap_content"
+        app:layout_constraintWidth_min="40dp"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/chip_padding"
+        android:layout_marginStart="@dimen/element_horizontal_margin"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/kita_aufnahmealter"
+        android:textAppearance="?attr/textAppearanceListItem"
+        android:textSize="@dimen/chip_text_size"
+        android:text="NIE"
+        android:textAlignment="center"
+        android:background="@drawable/rounded_corner_list"/>
+
+</android.support.constraint.ConstraintLayout>
