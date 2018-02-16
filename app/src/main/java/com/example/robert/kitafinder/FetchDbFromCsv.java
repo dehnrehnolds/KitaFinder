@@ -34,8 +34,23 @@ public class FetchDbFromCsv  extends AsyncTask<Void, Integer, Integer> {
         CSVReader reader = null;
         ArrayList<ContentValues> cvVectorKita = new ArrayList<ContentValues>();
         ArrayList<ContentValues> cvVectorLoc = new ArrayList<ContentValues>();
+        int kitasDeleted = mContext.getContentResolver().delete(
+                KitaContract.KitaEntry.CONTENT_URI,
+                null,
+                null
+        );
+        int locationsDeleted = mContext.getContentResolver().delete(
+                KitaContract.LocationEntry.CONTENT_URI,
+                null,
+                null
+        );
+
+        Log.d(TAG, "Locations deleted: " + locationsDeleted +
+                "  ....  Kitas deleted: " + kitasDeleted);
+
         try{
-            reader = new CSVReader(new InputStreamReader(mContext.getAssets().open("Kitaliste.csv")),';');
+            reader = new CSVReader(new InputStreamReader(mContext.getAssets()
+                    .open("Kitaliste.csv")),';');
             String[] nextLine;
             int lineNr = 0;
             while ((nextLine = reader.readNext()) != null) {
@@ -47,6 +62,7 @@ public class FetchDbFromCsv  extends AsyncTask<Void, Integer, Integer> {
                 Log.d(TAG,"Row Nr: " +lineNr + "  Columns in this row: " +nextLine.length);
                 Log.d(TAG,"Spalte0(ID): " +nextLine[0]+"  Spalte1(Name): " +nextLine[1]);
 
+                contentVKita.put(KitaContract.KitaEntry._ID, lineNr);
                 contentVKita.put(KitaContract.KitaEntry.COLUMN_NAME, nextLine[1]);
                 contentVKita.put(KitaContract.KitaEntry.COLUMN_EINRICHTUNG, nextLine[2]);
                 contentVKita.put(KitaContract.KitaEntry.COLUMN_TRÄGER, nextLine[3]);
@@ -63,12 +79,12 @@ public class FetchDbFromCsv  extends AsyncTask<Void, Integer, Integer> {
                 contentVKita.put(KitaContract.KitaEntry.COLUMN_FREMDSP, nextLine[16]);
                 contentVKita.put(KitaContract.KitaEntry.COLUMN_FAV, "false");
 
-                contentVLoc.put(KitaContract.LocationEntry.COLUMN_TYPE, 3); //all csv-entries = kita
+                contentVLoc.put(KitaContract.LocationEntry.COLUMN_TYPE, 0); //all csv-entries = kita
                 contentVLoc.put(KitaContract.LocationEntry.COLUMN_LAT, Float.parseFloat(nextLine[6]));
                 contentVLoc.put(KitaContract.LocationEntry.COLUMN_LONG, Float.parseFloat(nextLine[7]));
                 contentVLoc.put(KitaContract.LocationEntry.COLUMN_DIST, "-1");
                 contentVLoc.put(KitaContract.LocationEntry.COLUMN_MAPST, "0"); // all are invisible
-
+                contentVLoc.put(KitaContract.LocationEntry.COLUMN_FK_KITA_ID, lineNr);
                 cvVectorKita.add(contentVKita);
                 cvVectorLoc.add(contentVLoc);
             }

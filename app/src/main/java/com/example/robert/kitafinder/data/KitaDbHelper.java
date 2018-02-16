@@ -13,7 +13,7 @@ public class KitaDbHelper extends SQLiteOpenHelper {
 
     private static final String TAG = KitaDbHelper.class.getSimpleName();
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 25;
+    private static final int DATABASE_VERSION = 28;
 
     static final String DATABASE_NAME = "kita.db";
 
@@ -28,7 +28,7 @@ public class KitaDbHelper extends SQLiteOpenHelper {
         final String SQL_CREATE_KITA_TABLE = "CREATE TABLE " +
                 KitaContract.KitaEntry.TABLE_NAME + " (" +
 
-                KitaContract.KitaEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                KitaContract.KitaEntry._ID + " INTEGER PRIMARY KEY UNIQUE NOT NULL," +
 
                 KitaContract.KitaEntry.COLUMN_NAME + " TEXT NOT NULL, " +
                 KitaContract.KitaEntry.COLUMN_EINRICHTUNG + " TEXT NOT NULL, " +
@@ -81,6 +81,7 @@ public class KitaDbHelper extends SQLiteOpenHelper {
         // If you want to update the schema without wiping data, commenting out the next 2 lines
         // should be your top priority before modifying this method.
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + KitaContract.KitaEntry.TABLE_NAME);
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + KitaContract.LocationEntry.TABLE_NAME);
         onCreate(sqLiteDatabase);
     }
 }

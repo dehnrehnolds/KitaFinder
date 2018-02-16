@@ -80,7 +80,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
 
     // should the database be upddated?? (must be set false after first start automatically.
     // maybe re-activation through settings menue)
-    private static boolean updateDB = true;
+    private static boolean updateDB = false;
     public static int mInserted = 0;
 
     class AddressResultReceiver extends ResultReceiver {
@@ -275,6 +275,15 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                         // set dummie address in case of first launch
                         mLastSearchAddress.setLatitude(33);
                         mLastSearchAddress.setLongitude(45);
+                        ContentValues contentV = new ContentValues();
+                        contentV.put(KitaContract.LocationEntry.COLUMN_LAT, 33.0);
+                        contentV.put(KitaContract.LocationEntry.COLUMN_LONG, 45.0);
+                        contentV.put(KitaContract.LocationEntry.COLUMN_DIST, -1.0);
+                        contentV.put(KitaContract.LocationEntry.COLUMN_MAPST, 3);
+                        contentV.put(KitaContract.LocationEntry.COLUMN_TYPE, 3);
+                        contentV.put(KitaContract.LocationEntry.COLUMN_FK_KITA_ID, -3);
+                        getContentResolver().insert(KitaContract.LocationEntry.CONTENT_URI,
+                                contentV);
                     }
 
                 } else {
@@ -372,6 +381,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
 
     protected void onStop() {
         Log.d(TAG, "onStop()");
+        super.onStop();
         mGoogleApiClient.disconnect();
         if (mLastSearchAddress == null && mEditTextAddress == null) {
             Log.d(TAG, "mLastSearchAddress AND mEditTextAddress are NULL");
@@ -398,8 +408,6 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                 selection,
                 args
         );
-
-        super.onStop();
 
     }
 

@@ -98,7 +98,7 @@ public class KitaContract {
 
         // locationOption can be "0" - invisible , "1" - light, "2" - bold or "3" - home
         public static Uri buildKitaUriWithLocation(String locationOption){
-            return CONTENT_URI.buildUpon().appendQueryParameter(LOCATION_OPTION, locationOption)
+            return CONTENT_URI.buildUpon().appendPath(locationOption)
                     .build();
         }
 
@@ -124,7 +124,7 @@ public class KitaContract {
         // Column with the primary key of kitaliste
 //        public static final String COLUMN_KITA_ID = "_id";
 
-        // Type of localition; 0 = home, 3 = kita
+        // Type of localition; 3 = home, 0 = kita
         public static final String COLUMN_TYPE = "type";
         // Lat coord of the location
         public static final String COLUMN_LAT = "latitude";

@@ -305,7 +305,7 @@ public class KitaProvider extends ContentProvider {
                 break;
             }
             case LOCATION: {
-                rowsUpdated = db.update(KitaContract.KitaEntry.TABLE_NAME, values, selection,
+                rowsUpdated = db.update(KitaContract.LocationEntry.TABLE_NAME, values, selection,
                         selectionArgs);
                 break;
             }

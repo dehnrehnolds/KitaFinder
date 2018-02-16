@@ -165,8 +165,10 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
             default:
                 Log.d(TAG, "default");
                 sortOrder = KitaContract.LocationEntry.COLUMN_DIST + " ASC";
-                kitaByLocationUri = KitaContract.KitaEntry.CONTENT_URI;
-                selection = KitaContract.LocationEntry.COLUMN_MAPST + " <= ?";
+                kitaByLocationUri = KitaContract.KitaEntry
+                        .buildKitaUriWithLocation(mContext.getString(R.string.location_option_all));
+                selection = KitaContract.LocationEntry.TABLE_NAME + "." +
+                        KitaContract.LocationEntry.COLUMN_MAPST + " <= ?";
                 args = new String[]{"3"};
 
                 //query all Kitas with given sort order
@@ -175,6 +177,8 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
                 break;
 
         }
+
+        Log.d(TAG, "Cursor.length:" + cursor.getCount());
 
         if (cursor != null) swapCursor(cursor);
         else Log.e(TAG, "(Cursor == null) after query");
