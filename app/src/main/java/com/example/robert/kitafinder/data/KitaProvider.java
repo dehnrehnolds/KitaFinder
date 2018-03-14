@@ -66,7 +66,8 @@ public class KitaProvider extends ContentProvider {
             KitaContract.LocationEntry.COLUMN_MAPST + " = ? ";
 
     public static final String sLocationKitaSelection =
-            KitaContract.LocationEntry.COLUMN_MAPST + " <= ?";
+            KitaContract.LocationEntry.TABLE_NAME + "." +
+                    KitaContract.LocationEntry.COLUMN_MAPST + " <= ?";
 
     public static final String sLocationHomeSelection =
             KitaContract.LocationEntry.COLUMN_MAPST + " = ?";
@@ -87,6 +88,8 @@ public class KitaProvider extends ContentProvider {
                         "." + KitaContract.LocationEntry.COLUMN_FK_KITA_ID +
                         " = " + KitaContract.KitaEntry.TABLE_NAME +
                         "." + KitaContract.KitaEntry._ID);
+
+        Log.d(TAG, "Inner join: " + sKitaByLocationSettingQueryBuilder.toString() );
     }
 
 
@@ -99,33 +102,51 @@ public class KitaProvider extends ContentProvider {
 
         // if locationOption == "all" do not use any selection
         if (locationOption.equals(getContext().getString(R.string.location_option_all))) {
-            if (selection.equals("")){
+            Log.d(TAG, "location_option_all");
+            if (selection != null) {
+                Log.d(TAG, "selection != null");
+                if (selection.equals("")) {
+                    Log.d(TAG, "selection.equals('')");
+                    selection = sLocationKitaSelection;
+                    newSelectionArgs = kitaSelectionArgs;
+                } else {
+                    Log.d(TAG, "selection has some text");
+                    selection = selection + " AND " + sLocationKitaSelection;
+                    newSelectionArgs = ArrayUtils.addAll(selectionArgs, kitaSelectionArgs);
+                }
+            }
+            else {
+                Log.d(TAG, "selection == null");
                 selection = sLocationKitaSelection;
                 newSelectionArgs = kitaSelectionArgs;
             }
-            else {
-                selection = selection + " AND " + sLocationKitaSelection;
-                newSelectionArgs = ArrayUtils.addAll(selectionArgs,kitaSelectionArgs);
-            }
 
+            Log.d(TAG, "selection= " +selection);
+            for (String args:newSelectionArgs){
+                Log.d(TAG, "newSelectionArgs:" +args);
+            }
             return sKitaByLocationSettingQueryBuilder.query(mOpenHelper.getReadableDatabase(),
                     projection,
                     selection,
-                    selectionArgs,
+                    newSelectionArgs,
                     null,
                     null,
                     sortOrder
             );
         }
         // else use the locationOption form the Uri (either "0" - invisible, "1" - light, "2" - bold or "3" - home) as a selection
-        else return sKitaByLocationSettingQueryBuilder.query(mOpenHelper.getReadableDatabase(),
-                projection,
-                sLocationOptionSelection,
-                new String[]{locationOption},
-                null,
-                null,
-                sortOrder
-        );
+        else {
+            Log.d(TAG, "ELSE--");
+            return sKitaByLocationSettingQueryBuilder.query(mOpenHelper.getReadableDatabase(),
+                    projection,
+                    sLocationOptionSelection,
+                    new String[]{locationOption},
+                    null,
+                    null,
+                    sortOrder
+            );
+
+        }
     }
 
     /*

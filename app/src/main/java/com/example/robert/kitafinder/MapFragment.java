@@ -329,20 +329,6 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
                 int kitaID = allCursor.getInt(COL_FK_KITA_ID);
                 LatLng kitaPosition = new LatLng(kitaLat, kitaLong);
 
-                if (!(kitaName.equals("Zu Hause"))) {
-                    Marker tempMarker = mMap.addMarker(new MarkerOptions()
-                            .position(kitaPosition)
-                            .title(kitaName)
-                            .snippet(String.valueOf(kitaID))
-                            .alpha(0.1f)
-                            .flat(true)
-                            .icon(BitmapDescriptorFactory.defaultMarker(170))
-                    );
-                    mMarkerList.add(tempMarker);
-                    mIdList.add(kitaID);
-                    Log.d(TAG, "onMarker hinzugefügt: " + kitaName);
-
-                }
             } while (allCursor.moveToNext());
 
         if (allCursor != null) allCursor.close();

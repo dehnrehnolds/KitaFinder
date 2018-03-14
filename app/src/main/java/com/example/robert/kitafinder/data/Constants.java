@@ -84,4 +84,64 @@ public class Constants {
     public static final int COL_MAPST = 5;
     public static final int COL_FK_KITA_ID = 6;
 
+    public static final int COL_INNER_JOIN = 6; //Constant that has to be added for inner join table
+                                                 // column queries
+
+
+    public static final String[] INNER_JOIN_COLUMNS = {
+            // In this case the id needs to be fully qualified with a table name, since
+            // the content provider joins the location & weather tables in the background
+            // (both have an _id column)
+            // On the one hand, that's annoying.  On the other, you can search the weather table
+            // using the location set by the user, which is only in the Location table.
+            // So the convenience is worth it.
+            KitaContract.LocationEntry._ID,
+            KitaContract.LocationEntry.COLUMN_TYPE,
+            KitaContract.LocationEntry.COLUMN_LAT,
+            KitaContract.LocationEntry.COLUMN_LONG,
+            KitaContract.LocationEntry.COLUMN_DIST,
+            KitaContract.LocationEntry.COLUMN_MAPST,
+            KitaContract.LocationEntry.COLUMN_FK_KITA_ID,
+            KitaContract.KitaEntry._ID,
+            KitaContract.KitaEntry.COLUMN_NAME,
+            KitaContract.KitaEntry.COLUMN_EINRICHTUNG,
+            KitaContract.KitaEntry.COLUMN_TRÄGER,
+            KitaContract.KitaEntry.COLUMN_ADRESSE,
+            KitaContract.KitaEntry.COLUMN_ORT,
+            KitaContract.KitaEntry.COLUMN_TELEFON,
+            KitaContract.KitaEntry.COLUMN_EMAIL,
+            KitaContract.KitaEntry.COLUMN_WEB,
+            KitaContract.KitaEntry.COLUMN_ÖFFNET,
+            KitaContract.KitaEntry.COLUMN_SCHLIEßT,
+            KitaContract.KitaEntry.COLUMN_ÖFFNUNGSD,
+            KitaContract.KitaEntry.COLUMN_ÖFFNUNGSZ,
+            KitaContract.KitaEntry.COLUMN_AUFNAHMEA,
+            KitaContract.KitaEntry.COLUMN_FREMDSP,
+            KitaContract.KitaEntry.COLUMN_FAV,
+    };
+
+    public static final int IJ_COL_LOCID = 0;
+    public static final int IJ_COL_TYPE = 1;
+    public static final int IJ_COL_LAT = 2;
+    public static final int IJ_COL_LONG = 3;
+    public static final int IJ_COL_DIST = 4;
+    public static final int IJ_COL_MAPST = 5;
+    public static final int IJ_COL_FK_KITA_ID = 6;
+    public static final int IJ_COL_KITAID = 7;
+    public static final int IJ_COL_NAME = 8;
+    public static final int IJ_COL_EINRICHTUNG = 9;
+    public static final int IJ_COL_TRÄGER = 10;
+    public static final int IJ_COL_ADRESSE = 11;
+    public static final int IJ_COL_ORT = 12;
+    public static final int IJ_COL_TELEFON = 13;
+    public static final int IJ_COL_EMAIL = 14;
+    public static final int IJ_COL_WEB = 15;
+    public static final int IJ_COL_ÖFFNET = 16;
+    public static final int IJ_COL_SCHLIEßT = 17;
+    public static final int IJ_COL_ÖFFNUNGSD = 18;
+    public static final int IJ_COL_ÖFFNUNGSZ = 19;
+    public static final int IJ_COL_AUFNAHMEA = 20;
+    public static final int IJ_COL_FREMDSP = 21;
+    public static final int IJ_COL_FAV = 22;
+
 }

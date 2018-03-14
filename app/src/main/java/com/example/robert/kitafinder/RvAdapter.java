@@ -40,10 +40,18 @@ import static android.R.attr.editorExtras;
 import static android.R.attr.id;
 import static com.example.robert.kitafinder.data.Constants.COL_AUFNAHMEA;
 import static com.example.robert.kitafinder.data.Constants.COL_DIST;
+import static com.example.robert.kitafinder.data.Constants.COL_FK_KITA_ID;
 import static com.example.robert.kitafinder.data.Constants.COL_FREMDSP;
+import static com.example.robert.kitafinder.data.Constants.COL_INNER_JOIN;
 import static com.example.robert.kitafinder.data.Constants.COL_KITAID;
 import static com.example.robert.kitafinder.data.Constants.COL_NAME;
 import static com.example.robert.kitafinder.data.Constants.COL_ÖFFNUNGSZ;
+import static com.example.robert.kitafinder.data.Constants.IJ_COL_AUFNAHMEA;
+import static com.example.robert.kitafinder.data.Constants.IJ_COL_DIST;
+import static com.example.robert.kitafinder.data.Constants.IJ_COL_FREMDSP;
+import static com.example.robert.kitafinder.data.Constants.IJ_COL_KITAID;
+import static com.example.robert.kitafinder.data.Constants.IJ_COL_NAME;
+import static com.example.robert.kitafinder.data.Constants.IJ_COL_ÖFFNUNGSZ;
 
 
 /**
@@ -63,6 +71,7 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
     private static final String TAG = RvAdapter.class.getSimpleName();
     private final Context mContext;
     private final ClickListener mListener;
+    private final float mSearchRadius;
     private int viewNr;
 
     // Specify the columns we need.
@@ -77,6 +86,7 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
         //open filter preferences
         SharedPreferences sharedPref = mContext.getSharedPreferences("filter", context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
+        mSearchRadius = (float) sharedPref.getInt(mContext.getString(R.string.search_radius), -1);
 
         //get the filter settings for each filter
         final int minAge = sharedPref.getInt(mContext.getString(R.string.minimum_age),-1);
@@ -147,6 +157,9 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
         String sortOrder;
         Uri kitaByLocationUri;
         Cursor cursor = null;
+        Cursor kitaCursor = null;
+        Cursor locCursor = null;
+//        filter = "test";
 
         switch (filter){
             case "favourites":
@@ -161,6 +174,22 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
                 // query all Kitas with given sort order
                 cursor = mContext.getContentResolver()
                         .query(kitaByLocationUri, null, selection, args, sortOrder);
+                break;
+            case "test":
+                Log.d(TAG, "test");
+                // query all Kitas with given sort order
+                kitaCursor = mContext.getContentResolver()
+                        .query(KitaContract.KitaEntry.CONTENT_URI,
+                                null,
+                                null,
+                                null,
+                                null);
+                locCursor = mContext.getContentResolver()
+                        .query(KitaContract.LocationEntry.CONTENT_URI,
+                                null,
+                                null,
+                                null,
+                                null);
                 break;
             default:
                 Log.d(TAG, "default");
@@ -178,21 +207,34 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
 
         }
 
-        Log.d(TAG, "Cursor.length:" + cursor.getCount());
 
-        if (cursor != null) swapCursor(cursor);
+        if (cursor != null) {
+            Log.d(TAG, "Cursor.length:" + cursor.getCount());
+            Log.d(TAG, "Cursor.getColumnCount:" + cursor.getColumnCount());
+            swapCursor(cursor);
+        }
         else Log.e(TAG, "(Cursor == null) after query");
-//
+
 //        //Test Output
-//        if (cursor.moveToFirst()){
-//            while (!cursor.isAfterLast()) {
-//                Log.d(TAG, "cursor move to First! Columns: " + cursor.getColumnCount()
-//                        + " String and der Stelle 1: " + cursor.getString(1)
-//                        + "Column count: " + cursor.getColumnCount());
-//                Log.d(TAG, "Kita Öffnet: " + cursor.getFloat(11));
-//                Log.d(TAG, "Kita Schleißt: " + cursor.getFloat(12));
-//                Log.d(TAG, "Kita Öffnunszeit: " + cursor.getFloat(13));
-//                cursor.moveToNext();
+//        if (kitaCursor != null){
+//            kitaCursor.moveToFirst();
+//            while (!kitaCursor.isAfterLast()) {
+//                Log.d(TAG, "cursor move to First! Columns: " + kitaCursor.getColumnCount()
+//                        + " String and der Stelle 1: " + kitaCursor.getString(1)
+//                        + "Column count: " + kitaCursor.getColumnCount());
+//                Log.d(TAG, "Kita_ID: " + kitaCursor.getLong(COL_KITAID));
+//                kitaCursor.moveToNext();
+//            }
+//        } else Log.e(TAG, "NOT cursor.moveToFirst()!");
+//
+//        if (locCursor != null){
+//            locCursor.moveToFirst();
+//            while (!locCursor.isAfterLast()) {
+//                Log.d(TAG, "cursor move to First! Columns: " + locCursor.getColumnCount()
+//                        + " String and der Stelle 1: " + locCursor.getString(1)
+//                        + "Column count: " + locCursor.getColumnCount());
+//                Log.d(TAG, "Kita_Foreign_ID: " + locCursor.getLong(COL_FK_KITA_ID));
+//                locCursor.moveToNext();
 //            }
 //        } else Log.e(TAG, "NOT cursor.moveToFirst()!");
     }
@@ -211,24 +253,24 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
 
         viewNr++;
         //Bind Name
-        String kitaName = cursor.getString(COL_NAME);
+        String kitaName = cursor.getString(IJ_COL_NAME);
         //Kita names ar far toooo loooong
         if (kitaName.length()<24 && kitaName.length()>0) holder.name.setText(kitaName);
         else if (kitaName.length()>=24) holder.name.setText(kitaName.substring(0,21)+"...");
         else holder.name.setText("kein Kitaname gefunden...");
 
         //Bind Öffnungszeiten
-        String kitaÖffnungsz = cursor.getString(COL_ÖFFNUNGSZ);
+        String kitaÖffnungsz = cursor.getString(IJ_COL_ÖFFNUNGSZ);
         if (kitaÖffnungsz.length()>0) holder.öffnungsz.setText(kitaÖffnungsz+" Uhr");
         else holder.öffnungsz.setText("Öffnungszeit n.A.");
 
         //Bind Aufnahmealter
-        String kitaAufnahmea = cursor.getString(COL_AUFNAHMEA);
+        String kitaAufnahmea = cursor.getString(IJ_COL_AUFNAHMEA);
         if (kitaAufnahmea.length()==0) holder.aufnahmea.setText("nicht bekannt");
         else holder.aufnahmea.setText("ab "+kitaAufnahmea+" Mon.");
 
         //Bind Sprachen
-        String sprache = cursor.getString(COL_FREMDSP);
+        String sprache = cursor.getString(IJ_COL_FREMDSP);
         //Log.d(TAG, "Fremdsprache: "+ sprache);
         //Log.d(TAG, "kitaID: " + cursor.getInt(COL_ID));
         //Log.d(TAG, "kitaName: " + cursor.getString(COL_NAME));
@@ -241,7 +283,7 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
 
 
         //Bind Distanz
-        float kitaDistanz = cursor.getFloat(COL_DIST);
+        float kitaDistanz = cursor.getFloat(IJ_COL_DIST);
         if (kitaDistanz >= 0.0) holder.distanz.setText(String.format(
                 Locale.GERMAN,
                 "%2.1f km",
@@ -252,7 +294,7 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
         // Bind Fav-Logo (muss die Datenbank fresch callen, weil der cursor bei hin-und her scrollen
         // eventuell noch ncihts davon weiß)
         Uri kitaUri = KitaContract.KitaEntry.CONTENT_URI;
-        int kitaId = cursor.getInt(COL_KITAID);
+        int kitaId = cursor.getInt(IJ_COL_KITAID);
 
 
         Cursor freshCursor = holder.favorit.getContext().getContentResolver().query(
@@ -276,7 +318,28 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
             holder.favorit.setImageResource(R.drawable.ic_favorite_black_24dp);
         } else holder.favorit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
 
+
+        //make texts grey if kitaDitanz > mSearchRadius
+        if (kitaDistanz > mSearchRadius*1000) {
+            Log.d(TAG, "kitaDistanz > mSearchRadius");
+            holder.item.setBackgroundColor(R.color.lighterGrey);
+            holder.name.setTextColor(R.color.grey);
+            holder.öffnungsz.setTextColor(R.color.grey);
+            holder.aufnahmea.setTextColor(R.color.grey);
+            holder.sprache.setTextColor(R.color.grey);
+            holder.distanz.setTextColor(R.color.grey);
+        } else {
+            Log.d(TAG, "kitaDistanz <= mSearchRadius");
+            holder.item.setBackgroundColor(R.color.white);
+            holder.name.setTextColor(R.color.black);
+            holder.öffnungsz.setTextColor(R.color.black);
+            holder.aufnahmea.setTextColor(R.color.black);
+            holder.sprache.setTextColor(R.color.black);
+            holder.distanz.setTextColor(R.color.black);
+        }
+
     }
+
 
 
     public static class OverviewViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener

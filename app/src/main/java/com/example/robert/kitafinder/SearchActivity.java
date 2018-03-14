@@ -382,7 +382,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
     protected void onStop() {
         Log.d(TAG, "onStop()");
         super.onStop();
-        mGoogleApiClient.disconnect();
+        if (googleApiClientConnected) mGoogleApiClient.disconnect();
         if (mLastSearchAddress == null && mEditTextAddress == null) {
             Log.d(TAG, "mLastSearchAddress AND mEditTextAddress are NULL");
             return;
