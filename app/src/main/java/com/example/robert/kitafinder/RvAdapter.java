@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.location.Location;
 import android.net.Uri;
@@ -89,12 +90,14 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
         mSearchRadius = (float) sharedPref.getInt(mContext.getString(R.string.search_radius), -1);
 
         //get the filter settings for each filter
+        float searchRadius = (float) sharedPref.getInt(mContext.getString(R.string.search_radius), -1);
         final int minAge = sharedPref.getInt(mContext.getString(R.string.minimum_age),-1);
         float morningTime = sharedPref.getFloat(mContext.getString(R.string.morning_time), -1.0f);
         float eveningTime = sharedPref.getFloat(mContext.getString(R.string.evening_time), -1.0f);
         float openingHours = sharedPref.getFloat(mContext.getString(R.string.opening_hours),-1.0f);
         String language = sharedPref.getString(mContext.getString(R.string.language), "disable");
         Log.d(TAG, "------------  Filter Settings (RvAdapter) --------------");
+        Log.d(TAG,"    searchRadius: " + searchRadius);
         Log.d(TAG, "    minAge: " + minAge);
         Log.d(TAG,"    morningTime: " + morningTime);
         Log.d(TAG,"    eveningTime: " + eveningTime);
@@ -102,17 +105,23 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
         Log.d(TAG,"    language: " + language);
 
         //make array with all the values
-        String[] filterValues = {String.valueOf(minAge),
+        String[] filterValues = {
+//                String.valueOf(1000*searchRadius),
+                String.valueOf(minAge),
                 String.valueOf(morningTime),
                 String.valueOf(eveningTime),
                 String.valueOf(openingHours),
+                String.valueOf(3),   // 3 is home everything < 3 is Kita
                 language};
 
         //make array with the selection phrases for each filter
-        String[] filterSelcetion = {KitaProvider.sAufnahmealterSelection,
+        String[] filterSelcetion = {
+//                KitaProvider.sDistanzSelection,
+                KitaProvider.sAufnahmealterSelection,
                 KitaProvider.sÖffnetSelection,
                 KitaProvider.sSchließtSelection,
                 KitaProvider.sOpeningHoursSelection,
+                KitaProvider.sLocationKitaSelection,
                 KitaProvider.sFremdspracheSelection};
 
         List<String> argsList = new ArrayList<String>();
@@ -152,9 +161,10 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
         String[] args = new String[argsList.size()];
         argsList.toArray(args);
         Log.d(TAG, "Length of args: " + args.length);
+        for (String arg:args) Log.d(TAG, "arg: " + arg);
 
         //initialise sortOrder, kitaUri and cursor for query within switch-statement
-        String sortOrder;
+        String sortOrder = KitaContract.LocationEntry.COLUMN_DIST + " ASC";
         Uri kitaByLocationUri;
         Cursor cursor = null;
         Cursor kitaCursor = null;
@@ -164,41 +174,35 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
         switch (filter){
             case "favourites":
                 Log.d(TAG, "favourites");
-                sortOrder = KitaContract.LocationEntry.COLUMN_DIST + " ASC";
                 kitaByLocationUri = KitaContract.KitaEntry
                         .buildKitaUriWithLocation(mContext.getString(R.string.location_option_all));
-                selection = KitaContract.KitaEntry.COLUMN_FAV+" = ? AND " +
-                        KitaContract.LocationEntry.COLUMN_MAPST + " <= ?";
-                args = new String[]{"true", "3"};
+                selection = KitaContract.KitaEntry.COLUMN_FAV+ " = ?";
+                args = new String[]{"true"};
 
                 // query all Kitas with given sort order
                 cursor = mContext.getContentResolver()
                         .query(kitaByLocationUri, null, selection, args, sortOrder);
                 break;
-            case "test":
-                Log.d(TAG, "test");
-                // query all Kitas with given sort order
-                kitaCursor = mContext.getContentResolver()
-                        .query(KitaContract.KitaEntry.CONTENT_URI,
-                                null,
-                                null,
-                                null,
-                                null);
-                locCursor = mContext.getContentResolver()
-                        .query(KitaContract.LocationEntry.CONTENT_URI,
-                                null,
-                                null,
-                                null,
-                                null);
-                break;
+//            case "test":
+//                Log.d(TAG, "test");
+//                // query all Kitas with given sort order
+//                kitaCursor = mContext.getContentResolver()
+//                        .query(KitaContract.KitaEntry.CONTENT_URI,
+//                                null,
+//                                null,
+//                                null,
+//                                null);
+//                locCursor = mContext.getContentResolver()
+//                        .query(KitaContract.LocationEntry.CONTENT_URI,
+//                                null,
+//                                null,
+//                                null,
+//                                null);
+//                break;
             default:
                 Log.d(TAG, "default");
-                sortOrder = KitaContract.LocationEntry.COLUMN_DIST + " ASC";
                 kitaByLocationUri = KitaContract.KitaEntry
                         .buildKitaUriWithLocation(mContext.getString(R.string.location_option_all));
-                selection = KitaContract.LocationEntry.TABLE_NAME + "." +
-                        KitaContract.LocationEntry.COLUMN_MAPST + " <= ?";
-                args = new String[]{"3"};
 
                 //query all Kitas with given sort order
                 cursor = mContext.getContentResolver()
@@ -318,24 +322,22 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
             holder.favorit.setImageResource(R.drawable.ic_favorite_black_24dp);
         } else holder.favorit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
 
-
         //make texts grey if kitaDitanz > mSearchRadius
-        if (kitaDistanz > mSearchRadius*1000) {
-            Log.d(TAG, "kitaDistanz > mSearchRadius");
-            holder.item.setBackgroundColor(R.color.lighterGrey);
-            holder.name.setTextColor(R.color.grey);
-            holder.öffnungsz.setTextColor(R.color.grey);
-            holder.aufnahmea.setTextColor(R.color.grey);
-            holder.sprache.setTextColor(R.color.grey);
-            holder.distanz.setTextColor(R.color.grey);
+        if (kitaDistanz >= mSearchRadius*1000+50) {
+            holder.distanz.setTextColor(ContextCompat.getColor(mContext, R.color.colorAccent));
+            holder.name.setTextColor(Color.GRAY);
+            holder.öffnungsz.setTextColor(Color.GRAY);
+            holder.aufnahmea.setTextColor(Color.GRAY);
+            holder.sprache.setTextColor(Color.GRAY);
+            holder.favorit.setAlpha(0.5f);
+        //make them black again, if scrolled back up
         } else {
-            Log.d(TAG, "kitaDistanz <= mSearchRadius");
-            holder.item.setBackgroundColor(R.color.white);
-            holder.name.setTextColor(R.color.black);
-            holder.öffnungsz.setTextColor(R.color.black);
-            holder.aufnahmea.setTextColor(R.color.black);
-            holder.sprache.setTextColor(R.color.black);
-            holder.distanz.setTextColor(R.color.black);
+            holder.distanz.setTextColor(Color.BLACK);
+            holder.name.setTextColor(Color.BLACK);
+            holder.öffnungsz.setTextColor(Color.BLACK);
+            holder.aufnahmea.setTextColor(Color.BLACK);
+            holder.sprache.setTextColor(Color.BLACK);
+            holder.favorit.setAlpha(1.0f);
         }
 
     }

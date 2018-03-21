@@ -46,11 +46,11 @@ public class GetDistanceTask extends AsyncTask<Void,Integer,Integer> {
         int rowsUpdated = 0;
         int max = 0;
         final Uri locationUri = KitaContract.LocationEntry.CONTENT_URI;
-        final String selection = KitaProvider.sLocationKitaSelection;
-        final String[] selectionArgs = new String[]{"3"};
+        String selection = KitaProvider.sLocationKitaSelection;
+        String[] args = new String[] {"3"};
         //All entries, unsorted
         mCursor = activity.getContentResolver()
-                .query(locationUri, null, selection, selectionArgs, null);
+                .query(locationUri, null, selection, args, null);
         if (mCursor != null)
             max = mCursor.getCount();
         mCursor.moveToFirst();
