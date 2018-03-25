@@ -64,12 +64,13 @@ import static com.example.robert.kitafinder.data.Constants.COL_ÖFFNUNGSZ;
  * Created by Robert on 23.10.2017.
  */
 
-public class MapFragment extends SupportMapFragment implements OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener {
+public class MapFragment extends SupportMapFragment implements OnMapReadyCallback,
+        GoogleMap.OnInfoWindowClickListener {
 
     /** Demonstrates customizing the info window and/or its contents. */
     class CustomInfoWindowAdapter implements GoogleMap.InfoWindowAdapter {
 
-        // These are both viewgroups containing an ImageView with id "badge" and two TextViews with id
+        // A viewgroups containing an ImageView with id "badge" and two TextViews with id
         private final View mContents;
 
         CustomInfoWindowAdapter() {
@@ -166,8 +167,8 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
     }
 
     private final String TAG = MapFragment.class.getSimpleName();
-    private final LatLng HAMBURG = new LatLng(53.558, 9.927);
-    private final LatLng KIEL = new LatLng(53.551, 9.993);
+
+
 
     private static final String ARG_SECTION_NUMBER = "section_number";
     private GoogleMap mMap;
@@ -277,6 +278,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
                 position(mSearchAddressLL)
                 .title("Zu Hause")
                 .draggable(true)
+                .icon(BitmapDescriptorFactory.defaultMarker(240))
         );
     }
 
@@ -305,7 +307,8 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
 
         Activity activity = getActivity();
         //open filter preferences
-        SharedPreferences sharedPref = activity.getSharedPreferences("filter", Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = activity.getSharedPreferences("filter",
+                Context.MODE_PRIVATE);
 
         //get the filter settings for each filter
         float searchRadius = (float) sharedPref.getInt(getString(R.string.search_radius), -1);
@@ -314,13 +317,15 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         Cursor allCursor = context.getContentResolver()
                 .query(KitaContract.LocationEntry.CONTENT_URI,
                         null,
-                        KitaProvider.sDistanzSelection + " AND " + KitaProvider.sLocationKitaSelection,
+                        KitaProvider.sDistanzSelection + " AND "
+                                + KitaProvider.sLocationKitaSelection,
                         new String[]{String.valueOf(1000*searchRadius+500), "3"},
                         null);
 
 
         //create markers for all Kitas returned by the cursor
         Log.d(TAG, "vor Erstellen der Marker");
+        int markerCount = 0;
         if (allCursor != null && allCursor.moveToFirst())
             do {
                 double kitaLat = allCursor.getDouble(COL_LAT);
@@ -328,12 +333,18 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
                 String kitaName = allCursor.getString(COL_NAME);
                 int kitaID = allCursor.getInt(COL_FK_KITA_ID);
                 LatLng kitaPosition = new LatLng(kitaLat, kitaLong);
-
+                mMap.addMarker(new MarkerOptions()
+                        .position(kitaPosition)
+                        .visible(false)
+                        .title(kitaName)
+                );
+                markerCount++;
             } while (allCursor.moveToNext());
+        else Log.d(TAG, "allCursor == null");
 
         if (allCursor != null) allCursor.close();
 
-        Log.d(TAG, "nach Erstellen der Marker");
+        Log.d(TAG, "nach Erstellen der Marker. Marker created: "+ markerCount);
 
 
     }
@@ -343,7 +354,8 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         Context context = getContext();
         Activity activity = getActivity();
         //open filter preferences
-        SharedPreferences sharedPref = activity.getSharedPreferences("filter", Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = activity.getSharedPreferences("filter",
+                Context.MODE_PRIVATE);
 
         //get the filter settings for each filter
         float searchRadius = (float) sharedPref.getInt(getString(R.string.search_radius), -1);
@@ -388,7 +400,8 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
             Log.d(TAG, "index: " +index);
             if(Float.parseFloat(filterValues[index]) >= 0){
                 Log.d(TAG, String.format("Filter at index %d activ",index));
-                if (filterSelection.equals("")) filterSelection = filterSelection + filterSelectionList[index];
+                if (filterSelection.equals("")) filterSelection = filterSelection
+                        + filterSelectionList[index];
                 else filterSelection = filterSelection + " AND " + filterSelectionList[index];
                 argsList.add(filterValues[index]);
             }else Log.d(TAG, String.format("Filter at index %d nicht activ",index));
@@ -399,15 +412,17 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
             Log.d(TAG, String.format("Filter at index %d not activ",index));
         else{
             Log.d(TAG, String.format("Filter at index %d activ", index));
-            if (filterSelection.equals("")) filterSelection = filterSelection + filterSelectionList[index];
+            if (filterSelection.equals("")) filterSelection = filterSelection
+                    + filterSelectionList[index];
             else filterSelection = filterSelection + " AND " + filterSelectionList[index];
             argsList.add(filterValues[index]);
         }
 
-        // add filter for not displaying "zu Hause" item
-        if (filterSelection.equals("")) filterSelection += "NOT " + KitaContract.KitaEntry.COLUMN_NAME + " = ?";
-        else filterSelection += " AND NOT " + KitaContract.KitaEntry.COLUMN_NAME + " = ?";
-        argsList.add("Zu Hause");
+//        // add filter for not displaying "zu Hause" item
+//        if (filterSelection.equals("")) filterSelection += "NOT "
+//                + KitaContract.KitaEntry.COLUMN_NAME + " = ?";
+//        else filterSelection += " AND NOT " + KitaContract.KitaEntry.COLUMN_NAME + " = ?";
+//        argsList.add("Zu Hause");
 
         //convert argsList (type List<String>) to args (type String[])
         String[] args = new String[argsList.size()];

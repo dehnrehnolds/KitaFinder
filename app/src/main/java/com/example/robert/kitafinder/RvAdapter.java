@@ -322,8 +322,10 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
             holder.favorit.setImageResource(R.drawable.ic_favorite_black_24dp);
         } else holder.favorit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
 
+        float realSearchRadius = 0;
+        if (mSearchRadius == 0) realSearchRadius = 0.5f;
         //make texts grey if kitaDitanz > mSearchRadius
-        if (kitaDistanz >= mSearchRadius*1000+50) {
+        if (kitaDistanz >= realSearchRadius*1000+50) {
             holder.distanz.setTextColor(ContextCompat.getColor(mContext, R.color.colorAccent));
             holder.name.setTextColor(Color.GRAY);
             holder.öffnungsz.setTextColor(Color.GRAY);
