@@ -212,7 +212,7 @@
     <!--Strings related to ContentProvider -->
 
     <!--KitaUri-->
-    <string name="location_option_all">all</string>
+    <string name="location_option_all">allKitas</string>
     <string name="location_option_invisible">0</string>
     <string name="location_option_light">1</string>
     <string name="location_option_bold">2</string>

@@ -152,11 +152,6 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
             argsList.add(filterValues[index]);
         }
 
-//        // add filter for not displaying "zu Hause" item
-//        if (selection.equals("")) selection += "NOT " + KitaContract.KitaEntry.COLUMN_NAME + " = ?";
-//        else selection += " AND NOT " + KitaContract.KitaEntry.COLUMN_NAME + " = ?";
-//        argsList.add("Zu Hause");
-
         //convert argsList (type List<String>) to args (type String[])
         String[] args = new String[argsList.size()];
         argsList.toArray(args);
@@ -183,22 +178,6 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
                 cursor = mContext.getContentResolver()
                         .query(kitaByLocationUri, null, selection, args, sortOrder);
                 break;
-//            case "test":
-//                Log.d(TAG, "test");
-//                // query all Kitas with given sort order
-//                kitaCursor = mContext.getContentResolver()
-//                        .query(KitaContract.KitaEntry.CONTENT_URI,
-//                                null,
-//                                null,
-//                                null,
-//                                null);
-//                locCursor = mContext.getContentResolver()
-//                        .query(KitaContract.LocationEntry.CONTENT_URI,
-//                                null,
-//                                null,
-//                                null,
-//                                null);
-//                break;
             default:
                 Log.d(TAG, "default");
                 kitaByLocationUri = KitaContract.KitaEntry

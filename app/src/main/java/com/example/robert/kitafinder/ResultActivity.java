@@ -1,5 +1,6 @@
 package com.example.robert.kitafinder;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -34,6 +35,7 @@ import android.widget.LinearLayout;
 
 import com.example.robert.kitafinder.data.DetailTrigger;
 import com.example.robert.kitafinder.data.KitaContract;
+import com.example.robert.kitafinder.data.KitaProvider;
 import com.example.robert.kitafinder.data.RefreshTrigger;
 
 import org.greenrobot.eventbus.EventBus;

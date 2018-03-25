@@ -62,14 +62,15 @@ public class KitaProvider extends ContentProvider {
     public static final String sDistanzSelection =
             KitaContract.LocationEntry.COLUMN_DIST + " <= ? ";
 
-    public static final String sLocationOptionSelection =
-            KitaContract.LocationEntry.COLUMN_MAPST + " = ? ";
+    public static final String sLocationVisibleSelection =
+            KitaContract.LocationEntry.COLUMN_MAPST + " = ? OR " +
+                    KitaContract.LocationEntry.COLUMN_MAPST + " = ?";
 
     public static final String sLocationKitaSelection =
-            KitaContract.LocationEntry.TABLE_NAME + "." +
+            //KitaContract.LocationEntry.TABLE_NAME + "." +
                     KitaContract.LocationEntry.COLUMN_MAPST + " <= ?";
 
-    public static final String sLocationHomeSelection =
+    public static final String sLocationOptionSelection =
             KitaContract.LocationEntry.COLUMN_MAPST + " = ?";
 
     private static final SQLiteQueryBuilder sKitaByLocationSettingQueryBuilder;
@@ -98,7 +99,7 @@ public class KitaProvider extends ContentProvider {
 
         String locationOption = KitaContract.KitaEntry.getLocationOptionFromUri(uri);
         String[] newSelectionArgs;
-        String[] kitaSelectionArgs = new String[] {"3"};
+        String[] kitaSelectionArgs = new String[] {"2"};
 
         // if locationOption == "all" do not use any selection
         if (locationOption.equals(getContext().getString(R.string.location_option_all))) {
