@@ -301,7 +301,7 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
             holder.favorit.setImageResource(R.drawable.ic_favorite_black_24dp);
         } else holder.favorit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
 
-        float realSearchRadius = 0;
+        float realSearchRadius = mSearchRadius;
         if (mSearchRadius == 0) realSearchRadius = 0.5f;
         //make texts grey if kitaDitanz > mSearchRadius
         if (kitaDistanz >= realSearchRadius*1000+50) {

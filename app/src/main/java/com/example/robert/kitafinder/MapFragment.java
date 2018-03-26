@@ -104,7 +104,8 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
 
             // get KitaName and ID from marker title and snippet
             String kitaName = marker.getTitle();
-            String kitaID = marker.getSnippet();
+            String kitaId= marker.getSnippet();
+            Log.d(TAG, "kitaName: " + kitaName + "    kitaId: " + kitaId);
 
             // catch special case "home marker"
             if (kitaName.equals("Zu Hause")) {
@@ -122,7 +123,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
             // use KitaID to request all needed data from this Kita for the info-view
             Uri kitaUri = KitaContract.KitaEntry.CONTENT_URI;
             String selection = KitaContract.KitaEntry._ID + " = ?";
-            String[] args = new String[]{kitaID};
+            String[] args = new String[]{kitaId};
 
             // get the Kita from DB by query
             Cursor kitaCursor = getContext().getContentResolver().query(
@@ -135,7 +136,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
 
             // see if the cursor is not empty and morve to the next(and only) entry
             if (kitaCursor != null) kitaCursor.moveToNext();
-            else Log.e(TAG, "keine Kita mit dieser ID gefunden! kitaID: " + kitaID);
+            else Log.e(TAG, "keine Kita mit dieser ID gefunden! kitaID: " + kitaId);
 
             // bind kitaName (we have already from marker.title)
             if (kitaName.length() <= 30 && kitaName.length() > 0) name.setText(kitaName);
@@ -161,6 +162,9 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
             } else if (sprache.length() > 0) {
                 sprache.setText(fremdSprache.substring(0, 3).toUpperCase());
             } else Log.e(TAG, "Language column empty for Kita: " + kitaName);
+
+            // always close the cursor after used
+            kitaCursor.close();
 
         }
     }
@@ -194,7 +198,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         super.onCreate(onSavedInstanceState);
         mSearchAddress = getActivity().getIntent().getParcelableExtra("address");
         mSearchAddressLL = new LatLng(mSearchAddress.getLatitude(), mSearchAddress.getLongitude());
-        setUpMapIfNeeded();
+//        setUpMapIfNeeded();
     }
 
     @Override
@@ -257,6 +261,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         //mMap.setMyLocationEnabled(true);
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setMapToolbarEnabled(false);
+        mMap.clear();
 
         mHomeMarker = setHomeMarker();
         createKitaMarker();
@@ -311,9 +316,9 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
     private void createKitaMarker() {
         Log.d(TAG, "createKitaMarker()");
 
-        Cursor allCursor = getAllKitasWithLocations();
+        Cursor allCursor = getAllKitasWithLocationsInRadius();
 
-        //create markers for all Kitas returned by the cursor
+        //create markers for all Kitas within the raius (+ 0.5km) and display them "light"
         Log.d(TAG, "vor Erstellen der Marker");
         // counter for debug
         int markerCount = 0;
@@ -332,8 +337,12 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
                 // create a marker from that data
                 Marker marker = mMap.addMarker(new MarkerOptions()
                         .position(kitaPosition)
-                        .visible(false)
+                        .visible(true)
+                        .alpha(0.25f)
+                        .icon(BitmapDescriptorFactory.defaultMarker(210))
+                        .flat(true)
                         .title(kitaName)
+                        .snippet(String.valueOf(kitaID))
                 );
 
                 // Add the marker to the sparse Array
@@ -342,14 +351,14 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
                 // update this row for mapstatus "invisible"
                 ContentValues contentValues = new ContentValues();
                 contentValues.put(KitaContract.LocationEntry.COLUMN_MAPST,
-                        getString(R.string.location_option_invisible));
+                        getString(R.string.location_option_light));
                 int rowUpdated = getActivity().getContentResolver().update(
                         KitaContract.LocationEntry.CONTENT_URI,
                         contentValues,
                         KitaContract.LocationEntry.COLUMN_FK_KITA_ID + " = ?",
                         new String[] {String.valueOf(kitaID)});
 
-                // count markers + udated rows
+                // count markers + updated rows
                 markerCount++;
                 rowsUpdated += rowUpdated;
             } while (allCursor.moveToNext());
@@ -370,63 +379,38 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         // set counter for updated rows
         int rowsUpdated = 0;
 
-        // get all visible Kitas an put them to invisible, to reset the map
-        Cursor allVisibleCursor = getVisibleLocations();
-        if (allVisibleCursor != null && allVisibleCursor.moveToFirst()) {
-            do {
-                // get the kita-ID for this row
-                int kitaId = allVisibleCursor.getInt(COL_FK_KITA_ID);
 
-                // get the marker from the sparse array and set to invisible
-                mMarkerSparseArray.get(kitaId).setVisible(false);
-
-                // update this row for mapstatus "invisible"
-                ContentValues contentValues = new ContentValues();
-                contentValues.put(KitaContract.LocationEntry.COLUMN_MAPST,
-                        getString(R.string.location_option_invisible));
-                int rowUpdated = getActivity().getContentResolver().update(
-                        KitaContract.LocationEntry.CONTENT_URI,
-                        contentValues,
-                        KitaContract.LocationEntry.COLUMN_FK_KITA_ID + " = ?",
-                        new String[]{String.valueOf(kitaId)});
-                rowsUpdated += rowUpdated;
-            } while (allVisibleCursor.moveToNext());
-            Log.d(TAG, "Rows updated to set Kita Locations to 'invisible' :" + rowsUpdated);
-        } else Log.e(TAG, "No Kitas were visible, non updated.");
-
-        if (allVisibleCursor != null) allVisibleCursor.close();
-
-        // get all Kita Locations within the searchRadius (+500m) and make them "light"
-        Cursor radiusCursor = getLocationsInRadius();
-        if (radiusCursor != null && radiusCursor.moveToFirst()) {
-            do {
-                // get the kita-ID for this row
-                int kitaId = radiusCursor.getInt(COL_FK_KITA_ID);
-
-                // get the marker from the sparse array and set to visible/light
-                Marker marker = mMarkerSparseArray.get(kitaId);
-                if (marker != null) {
-                    marker.setVisible(true);
-                    marker.setAlpha(0.25f);
-                    marker.setIcon(BitmapDescriptorFactory.defaultMarker(210));
-                    marker.setFlat(true);
-                } else Log.e(TAG, "marker could not be found at ID: "+ kitaId);
-
-                // update this row for mapstatus "invisible"
-                ContentValues contentValues = new ContentValues();
-                contentValues.put(KitaContract.LocationEntry.COLUMN_MAPST,
-                        getString(R.string.location_option_light));
-                int rowUpdated = getActivity().getContentResolver().update(
-                        KitaContract.LocationEntry.CONTENT_URI,
-                        contentValues,
-                        KitaContract.LocationEntry.COLUMN_FK_KITA_ID + " = ?",
-                        new String[]{String.valueOf(kitaId)});
-                rowsUpdated += rowUpdated;
-            } while (radiusCursor.moveToNext());
-            Log.d(TAG, "Rows updated to set Kita Locations to 'light' :" + rowsUpdated);
-        } else Log.e(TAG, "No Kitas were inside searchRadius, non updated.");
-
-        if (radiusCursor != null) radiusCursor.close();
+//        // get all Kita Locations within the searchRadius (+500m) and make them "light"
+//        Cursor radiusCursor = getLocationsInRadius();
+//        if (radiusCursor != null && radiusCursor.moveToFirst()) {
+//            do {
+//                // get the kita-ID for this row
+//                int kitaId = radiusCursor.getInt(COL_FK_KITA_ID);
+//
+//                // get the marker from the sparse array and set to visible/light
+//                Marker marker = mMarkerSparseArray.get(kitaId);
+//                if (marker != null) {
+//                    marker.setVisible(true);
+//                    marker.setAlpha(0.25f);
+//                    marker.setIcon(BitmapDescriptorFactory.defaultMarker(210));
+//                    marker.setFlat(true);
+//                } else Log.e(TAG, "radiusCursor => marker could not be found at ID: "+ kitaId);
+//
+//                // update this row for mapstatus "invisible"
+//                ContentValues contentValues = new ContentValues();
+//                contentValues.put(KitaContract.LocationEntry.COLUMN_MAPST,
+//                        getString(R.string.location_option_light));
+//                int rowUpdated = getActivity().getContentResolver().update(
+//                        KitaContract.LocationEntry.CONTENT_URI,
+//                        contentValues,
+//                        KitaContract.LocationEntry.COLUMN_FK_KITA_ID + " = ?",
+//                        new String[]{String.valueOf(kitaId)});
+//                rowsUpdated += rowUpdated;
+//            } while (radiusCursor.moveToNext());
+//            Log.d(TAG, "Rows updated to set Kita Locations to 'light' :" + rowsUpdated);
+//        } else Log.e(TAG, "No Kitas were inside searchRadius, non updated.");
+//
+//        if (radiusCursor != null) radiusCursor.close();
 
 
         // get all active Kita Locations (according to filter settings) and make them "bold"
@@ -440,7 +424,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
                     marker.setAlpha(1.0f);
                     marker.setIcon(BitmapDescriptorFactory.defaultMarker(240));
                     marker.setFlat(false);
-                } else Log.e(TAG, "marker could not be found at ID: "+ kitaId);
+                } else Log.e(TAG, "activeCursor => marker could not be found at ID: "+ kitaId);
 
                 // update this row for mapstatus "invisible"
                 ContentValues contentValues = new ContentValues();
@@ -480,21 +464,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
             }
         }
 
-    private Cursor getAllKitasWithLocations() {
-        Context context = getContext();
-        Activity activity = getActivity();
-
-        //query All Kitas with location
-        return context.getContentResolver()
-                .query(KitaContract.KitaEntry.buildKitaUriWithLocation(
-                        context.getString(R.string.location_option_all)),
-                        null,
-                        null,
-                        null,
-                        null);
-    }
-
-    private Cursor getLocationsInRadius() {
+    private Cursor getAllKitasWithLocationsInRadius() {
         Context context = getContext();
         Activity activity = getActivity();
 
@@ -507,17 +477,40 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         // translate searchRaduis value 0 to 0.5 km
         if (searchRadius == 0) searchRadius = 0.5f;
 
-        //query all Kitas within given search radius
+        //query All Kitas with location
         return context.getContentResolver()
-                .query(KitaContract.LocationEntry.CONTENT_URI,
+                .query(KitaContract.KitaEntry.buildKitaUriWithLocation(
+                        context.getString(R.string.location_option_all)),
                         null,
-                        KitaProvider.sDistanzSelection + " AND "
-                                + KitaProvider.sLocationKitaSelection,
-                        new String[]{
-                                String.valueOf(1000 * searchRadius + 500),
-                                context.getString(R.string.location_option_all)},
+                        KitaProvider.sDistanzSelection,
+                        new String[] {String.valueOf(1000 * searchRadius + 500)},
                         null);
     }
+
+//    private Cursor getLocationsInRadius() {
+//        Context context = getContext();
+//        Activity activity = getActivity();
+//
+//        //open filter preferences
+//        SharedPreferences sharedPref = activity.getSharedPreferences("filter",
+//                Context.MODE_PRIVATE);
+//
+//        //get the filter settings for each filter
+//        float searchRadius = (float) sharedPref.getInt(getString(R.string.search_radius), -1);
+//        // translate searchRaduis value 0 to 0.5 km
+//        if (searchRadius == 0) searchRadius = 0.5f;
+//
+//        //query all Kitas within given search radius
+//        return context.getContentResolver()
+//                .query(KitaContract.LocationEntry.CONTENT_URI,
+//                        null,
+//                        KitaProvider.sDistanzSelection + " AND "
+//                                + KitaProvider.sLocationKitaSelection,
+//                        new String[]{
+//                                String.valueOf(1000 * searchRadius + 500),
+//                                context.getString(R.string.location_option_all)},
+//                        null);
+//    }
 
     private Cursor getVisibleLocations() {
         Context context = getContext();
