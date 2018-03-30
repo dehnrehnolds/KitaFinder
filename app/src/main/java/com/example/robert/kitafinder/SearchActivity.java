@@ -19,11 +19,15 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputEditText;
+import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.SeekBar;
@@ -42,6 +46,7 @@ import com.opencsv.CSVReader;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -71,7 +76,16 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
     public Location mLastSearchAddress;
     public Location mEditTextAddress;
     private boolean mLocationExists = false;
-    private EditText mAddressInput;
+    private TextInputEditText mAddressInput;
+    private TextInputLayout mAddressInputLayout;
+
+
+//    private TextView mLatitudeText;
+//    private TextView mLongitudeText;
+//    private TextView mAccuracyText;
+//    private String mLatitudeLabel;
+//    private String mLongitudeLabel;
+//    private String mAccuracyLabel;
 
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
     private LocationRequest mLocationRequest = LocationRequest.create();
@@ -95,7 +109,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
             // or an error message sent from the intent service.
             Log.d(TAG, "onReceiveResults");
             if (resultData != null) {
-                mAddressInput.setHint(resultData
+                mAddressInput.setText(resultData
                         .getString(Constants.RESULT_DATA_KEY)
                         .replace(", Deutschland", "")
                         .replace(", ", "\n")
@@ -115,7 +129,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
         Log.d(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
-
+//        mAddressInputLayout.setHint("Adresse eingeben oder Standort verwenden...");
 
         /*
         Get shared preferences and lookup if app has been started before.
@@ -236,13 +250,13 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
 //        mLongitudeText = (TextView) findViewById((R.id.longitude_text));
 //        mAccuracyText = (TextView) findViewById(R.id.accuracy_text);
 //        mAddressText = (TextView) findViewById(R.id.address_text);
-        mAddressInput = (EditText) findViewById(R.id.address_input);
 
         mResultReceiver = new AddressResultReceiver(new Handler());
 
         final Button searchB = findViewById(R.id.search_button);
         searchB.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+
                 // creating intent for launching ResultActivity
                 Intent ButtonIntent = new Intent(v.getContext(), ResultActivity.class);
                 // opening SharedPrefs & editor
@@ -353,6 +367,20 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
             }
         });
 
+        mAddressInput = findViewById(R.id.address_input);
+        mAddressInputLayout = findViewById(R.id.address_input_layout);
+
+        mAddressInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    searchB.performClick();
+                    return true;
+                }
+                return false;
+            }
+        });
+
     }
 
     @Override
@@ -414,10 +442,10 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         googleApiClientConnected = true;
-        if (!checkPermissions()) requestPermissions();
-        else {
-            getLastLocation();
-        }
+//        if (!checkPermissions()) requestPermissions();
+//        else {
+//            getLastLocation();
+//        }
     }
 
     @Override

@@ -42,8 +42,9 @@
         <item name="android:layout_height">70dp</item>
     </style>
 
-    <style name="AppTheme.TooFar">
-        <item name="android:textColor">@color/grey</item>
+    <style name="HintStyleFocused" parent="TextAppearance.AppCompat">
+        <item name="android:textColor">?attr/colorAccent</item>
+        <item name="android:textSize">10sp</item>
     </style>
 
 </resources>
