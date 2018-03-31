@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 
 import com.example.robert.kitafinder.data.DetailTrigger;
+import com.example.robert.kitafinder.data.DistancesCalculatedTrigger;
 import com.example.robert.kitafinder.data.KitaContract;
 import com.example.robert.kitafinder.data.KitaItem;
 import com.example.robert.kitafinder.data.KitaProvider;
@@ -537,7 +538,6 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
                         null);
     }
 
-
     private Cursor getActiveKitasWithLocations() {
         Context context = getContext();
         Activity activity = getActivity();
@@ -635,6 +635,12 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         return context.getContentResolver()
                 .query(joinUri, null, filterSelection, args, sortOrder);
 
+    }
+
+    @Subscribe
+    public void initRecycleView(DistancesCalculatedTrigger event) {
+        // same effect as before, but different reason to trigger
+        setUpMap();
     }
 
 }

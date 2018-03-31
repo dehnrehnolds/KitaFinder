@@ -31,7 +31,7 @@ public class GetDistanceTask extends AsyncTask<Void,Integer,Integer> {
 
     private ProgressDialog mProgressDialog;
     private Location mSearchAddress;
-    private Cursor mCursor;
+    protected Cursor mCursor;
     Activity activity;
     private static final String TAG = GetDistanceTask.class.getSimpleName();
 

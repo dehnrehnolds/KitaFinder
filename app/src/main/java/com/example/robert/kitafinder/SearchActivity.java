@@ -1,6 +1,7 @@
 package com.example.robert.kitafinder;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -29,6 +30,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.SeekBar;
@@ -147,9 +149,6 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
             Intent intent = new Intent(this, ResultActivity.class);
             this.startActivity(intent);
         }
-
-//        editor.putBoolean(getString(R.string.pref_address_changed_key), true);
-//        editor.commit();
 
         // New Google Api-Client
         if (mGoogleApiClient == null) {
@@ -363,6 +362,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                     return;
                 }
                 v.getContext().startActivity(ButtonIntent);
+                hideKeyboard(v);
 
             }
         });
@@ -391,9 +391,9 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                 if (hasFocus) {
                     mAddressInput.setHint("");
                     mAddressInputLayout.setHint("Adresse eingeben oder Standort verwenden...");
-                    Toast.makeText(getApplicationContext(), "Got the focus", Toast.LENGTH_LONG).show();
+//                    Toast.makeText(getApplicationContext(), "Got the focus", Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(getApplicationContext(), "Lost the focus", Toast.LENGTH_LONG).show();
+//                    Toast.makeText(getApplicationContext(), "Lost the focus", Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -676,5 +676,17 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
             }
         }
         return locationFromAddress;
+    }
+
+    public static void hideKeyboard(View v) {
+        Context context = v.getRootView().getContext();
+        InputMethodManager imm = (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        //Find the currently focused view, so we can grab the correct window token from it.
+        View view = v.getRootView();
+        //If no view currently has focus, create a new one, just so we can grab a window token from it
+        if (view == null) {
+            view = new View(context);
+        }
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 }
