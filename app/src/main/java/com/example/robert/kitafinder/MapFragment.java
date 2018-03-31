@@ -290,7 +290,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
                 position(mSearchAddressLL)
                 .title("Zu Hause")
                 .draggable(true)
-                .icon(BitmapDescriptorFactory.defaultMarker(240))
+                .icon(BitmapDescriptorFactory.defaultMarker(15))
         );
     }
 

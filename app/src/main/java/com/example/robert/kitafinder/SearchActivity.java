@@ -23,6 +23,7 @@ import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.text.InputType;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -75,7 +76,6 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
     public Location mLastLocation;
     public Location mLastSearchAddress;
     public Location mEditTextAddress;
-    private boolean mLocationExists = false;
     private TextInputEditText mAddressInput;
     private TextInputLayout mAddressInputLayout;
 
@@ -94,7 +94,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
 
     // should the database be upddated?? (must be set false after first start automatically.
     // maybe re-activation through settings menue)
-    private static boolean updateDB = false;
+    protected static boolean updateDB = false;
     public static int mInserted = 0;
 
     class AddressResultReceiver extends ResultReceiver {
@@ -109,8 +109,8 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
             // or an error message sent from the intent service.
             Log.d(TAG, "onReceiveResults");
             if (resultData != null) {
-                mAddressInput.setText(resultData
-                        .getString(Constants.RESULT_DATA_KEY)
+                mAddressInput.setText(
+                        resultData.getString(Constants.RESULT_DATA_KEY)
                         .replace(", Deutschland", "")
                         .replace(", ", "\n")
                 );
@@ -310,6 +310,9 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                     Log.d(TAG, "Address found: " + mAddressInput.getText().toString());
                     try {
                         mEditTextAddress = convertAddress(mAddressInput.getText().toString());
+                        mAddressInput.setText(mEditTextAddress.getProvider()
+                                .replace(", Deutschland", "")
+                                .replace(", ", "\n"));
                     } catch (Exception e) {
                         Log.e(TAG, e.getMessage());
                     }
@@ -317,51 +320,48 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                         editor.putBoolean(getString(R.string.pref_address_changed_list), true);
                         editor.putBoolean(getString(R.string.pref_address_changed_map), true);
                         Log.d(TAG, "addressChanged changed to true");
-                        ButtonIntent.putExtra("address", mEditTextAddress);
-                        Log.d(TAG, "editTextAddress used for ButtonIntent of ResultActivity");
-                        mLastSearchAddress = mEditTextAddress;
                     } else {
                         editor.putBoolean(getString(R.string.pref_address_changed_list), false);
                         editor.putBoolean(getString(R.string.pref_address_changed_map), false);
                         Log.d(TAG, "    addressChanged changed to false");
-                        ButtonIntent.putExtra("address", mLastSearchAddress);
-                        Log.d(TAG, "mLastSearchAddress used for ButtonIntent of ResultActivity");
                     }
+                    ButtonIntent.putExtra("address", mEditTextAddress);
+                    Log.d(TAG, "editTextAddress used for ButtonIntent of ResultActivity");
+                    mLastSearchAddress = mEditTextAddress;
+                    editor.apply();
 
-
-                } else if (mLocationExists) {
-                    Log.d(TAG, "Using device location or previously stored location");
-
-                    // is the address last used different to the new Location (>50m)
-                    if (mLastSearchAddress.distanceTo(mLastLocation) > 50) {
-                        Log.d(TAG, "mLastSearchAddress:");
-                        Log.d(TAG, "    Lat: " + mLastSearchAddress.getLatitude());
-                        Log.d(TAG, "    Long: " + mLastSearchAddress.getLongitude());
-                        Log.d(TAG, "mLastLocation:");
-                        Log.d(TAG, "    Lat: " + mLastLocation.getLatitude());
-                        Log.d(TAG, "    Long: " + mLastLocation.getLongitude());
-                        editor.putBoolean(getString(R.string.pref_address_changed_list), true);
-                        editor.putBoolean(getString(R.string.pref_address_changed_map), true);
-                        Log.d(TAG, "    addressChanged changed to true");
-                        //saving the address
-                        ButtonIntent.putExtra("address", mLastLocation);
-                        Log.d(TAG, "mLastLocation used for ButtonIntent of ResultActivity");
-                        mLastSearchAddress = mLastLocation;
-
-                        // if the address last used is the same (<50m) as the new address, use the old
-                        // address and thatfore distances won't be newly calculated in ListFragment
-                    } else {
-                        editor.putBoolean(getString(R.string.pref_address_changed_list), false);
-                        editor.putBoolean(getString(R.string.pref_address_changed_map), false);
-                        Log.d(TAG, "    addressChanged changed to false");
-                        ButtonIntent.putExtra("address", mLastSearchAddress);
-                        Log.d(TAG, "mLastSearchAddress used for ButtonIntent of ResultActivity");
-                    }
+//                } else if (mLocationExists) {
+//                    Log.d(TAG, "Using device location or previously stored location");
+//
+//                    // is the address last used different to the new Location (>50m)
+//                    if (mLastSearchAddress.distanceTo(mLastLocation) > 50) {
+//                        Log.d(TAG, "mLastSearchAddress:");
+//                        Log.d(TAG, "    Lat: " + mLastSearchAddress.getLatitude());
+//                        Log.d(TAG, "    Long: " + mLastSearchAddress.getLongitude());
+//                        Log.d(TAG, "mLastLocation:");
+//                        Log.d(TAG, "    Lat: " + mLastLocation.getLatitude());
+//                        Log.d(TAG, "    Long: " + mLastLocation.getLongitude());
+//                        editor.putBoolean(getString(R.string.pref_address_changed_list), true);
+//                        editor.putBoolean(getString(R.string.pref_address_changed_map), true);
+//                        Log.d(TAG, "    addressChanged changed to true");
+//                        //saving the address
+//                        ButtonIntent.putExtra("address", mLastLocation);
+//                        Log.d(TAG, "mLastLocation used for ButtonIntent of ResultActivity");
+//                        mLastSearchAddress = mLastLocation;
+//
+//                        // if the address last used is the same (<50m) as the new address, use the old
+//                        // address and thatfore distances won't be newly calculated in ListFragment
+//                    } else {
+//                        editor.putBoolean(getString(R.string.pref_address_changed_list), false);
+//                        editor.putBoolean(getString(R.string.pref_address_changed_map), false);
+//                        Log.d(TAG, "    addressChanged changed to false");
+//                        ButtonIntent.putExtra("address", mLastSearchAddress);
+//                        Log.d(TAG, "mLastSearchAddress used for ButtonIntent of ResultActivity");
+//                    }
                 } else {
-                    Log.d(TAG, "    No location obtained, yet!");
+                    makeToast("Keine Adresse für die Suche angegeben");
                     return;
                 }
-                editor.apply();
                 v.getContext().startActivity(ButtonIntent);
 
             }
@@ -369,6 +369,10 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
 
         mAddressInput = findViewById(R.id.address_input);
         mAddressInputLayout = findViewById(R.id.address_input_layout);
+
+        mAddressInput.setHint("Adresse eingeben\noder Standort verwenden...");
+        mAddressInput.setImeOptions(EditorInfo.IME_ACTION_SEARCH);
+        mAddressInput.setRawInputType(InputType.TYPE_CLASS_TEXT);
 
         mAddressInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -378,6 +382,19 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                     return true;
                 }
                 return false;
+            }
+        });
+
+        mAddressInput.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean hasFocus) {
+                if (hasFocus) {
+                    mAddressInput.setHint("");
+                    mAddressInputLayout.setHint("Adresse eingeben oder Standort verwenden...");
+                    Toast.makeText(getApplicationContext(), "Got the focus", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Lost the focus", Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -521,7 +538,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
             Log.d(TAG, "permission granted");
             if (mLastLocation != null) {
                 Log.d(TAG, "Location exists");
-                mLocationExists = true;
+//                mLocationExists = true;
                 // permission has been granted, continue as usual
                 stopLocationUpdates();
 
@@ -650,6 +667,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                     Log.d(TAG, "lat: " + lat + "  long: " + lng);
                     locationFromAddress.setLatitude(addressList.get(0).getLatitude());
                     locationFromAddress.setLongitude(addressList.get(0).getLongitude());
+                    locationFromAddress.setProvider(addressList.get(0).getAddressLine(0));
 
                 }
             } catch (Exception e) {

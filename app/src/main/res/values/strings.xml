@@ -35,7 +35,6 @@
         <string name="refresh_loc_button_text">Location aktualisieren</string>
         <string name="refresh_add_button_text">Standort als Adresse</string>
         <string name="search_button_text">Kita finden</string>
-        <string name="address_input_hint">Adresse eingeben\noder Standort verwenden&#8230;</string>
 
     <!-- Result Activity -->
 
