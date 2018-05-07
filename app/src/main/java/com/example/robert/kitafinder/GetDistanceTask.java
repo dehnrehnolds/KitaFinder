@@ -58,7 +58,6 @@ public class GetDistanceTask extends AsyncTask<Void,Integer,Integer> {
                 double kitaLat = mCursor.getDouble(COL_LAT);
                 double kitaLong = mCursor.getDouble(COL_LONG);
                 int id = mCursor.getInt(COL_LOCID);
-                Log.d(TAG, "KitaID: "+id);
 
                 //make a Location-object from Kita's Lat & Long
                 Location kitaAddress = new Location("kitaName");
@@ -116,6 +115,7 @@ public class GetDistanceTask extends AsyncTask<Void,Integer,Integer> {
         }
 
         EventBus.getDefault().post(new DistancesCalculatedTrigger());
+        EventBus.getDefault().post(new RefreshTrigger());
         super.onPostExecute(rowsUpdated);
     }
 }

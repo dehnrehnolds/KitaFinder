@@ -152,6 +152,11 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
             argsList.add(filterValues[index]);
         }
 
+        //add maximum Radius
+        argsList.add("5000");
+        if (selection.equals("")) selection = KitaProvider.sDistanzSelection;
+        else selection = selection + " AND " + KitaProvider.sDistanzSelection;
+
         //convert argsList (type List<String>) to args (type String[])
         String[] args = new String[argsList.size()];
         argsList.toArray(args);
@@ -162,9 +167,6 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
         String sortOrder = KitaContract.LocationEntry.COLUMN_DIST + " ASC";
         Uri kitaByLocationUri;
         Cursor cursor = null;
-        Cursor kitaCursor = null;
-        Cursor locCursor = null;
-//        filter = "test";
 
         switch (filter){
             case "favourites":

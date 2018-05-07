@@ -10,6 +10,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
@@ -186,7 +187,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
     Marker mHomeMarker;
     Circle mCircle;
     ClusterManager<KitaItem> mClusterManager;
-    SparseArray<Marker> mMarkerSparseArray= new SparseArray<>();
+    SparseArray<Marker> mMarkerSparseArray;
 
     List<Marker> mMarkerList = new ArrayList<>();
     List<Integer> mIdList = new ArrayList<>();
@@ -228,6 +229,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         super.onResume();
         Log.d(TAG, "onResume()");
         mSearchAddress = getActivity().getIntent().getParcelableExtra("address");
+        if (mMap != null) focusMapCamera();
         setUpMapIfNeeded();
     }
 
@@ -248,13 +250,27 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
     }
 
     // This method will be called when a RefreshTrigger event is posted
-    // this might happen in case filter settings are changed in the FilterFragment
+    // this might happen in case filter settings are changed in the FilterFragment or
+    // after finishing getDistanceTask after changing the address
     @Subscribe
     public void refreshMap(RefreshTrigger event) {
-        //re-setting the Adapter will result in the refresh of the Kita list
         Log.d(TAG, "refreshMarkers() called");
-        setKitaMarker();
+
+        // load prefs to find out if address has been changed
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean addressChanged = prefs.getBoolean(getString(R.string.pref_address_changed_map), false);
+
+        // Kita markers have to be always created, when the filter changed
+        createKitaMarker();
+        setHomeMarker();
         drawCircle(mSearchAddressLL);
+//        // if address has been changed, all markers need to be created again
+//        if (addressChanged){
+//            mCircle = drawCircle(mSearchAddressLL);
+//            SharedPreferences.Editor editor = prefs.edit();
+//            editor.putBoolean(getString(R.string.pref_address_changed_map), false);
+//            editor.apply();
+//        }
     }
 
     private void setUpMap() {
@@ -262,18 +278,16 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         //mMap.setMyLocationEnabled(true);
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setMapToolbarEnabled(false);
-        mMap.clear();
 
-        mHomeMarker = setHomeMarker();
+//        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+//        boolean addressChanged = prefs.getBoolean(getString(R.string.pref_address_changed_map), false);
+
+        // if address has been changed, all markers need to be created again
         createKitaMarker();
-        setKitaMarker();
+        mHomeMarker = setHomeMarker();
         mCircle = drawCircle(mSearchAddressLL);
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mSearchAddressLL, 13));
-        // Zoom in, animating the camera.
-        mMap.animateCamera(CameraUpdateFactory.zoomIn());
-        // Zoom out to zoom level 10, animating with a duration of 2 seconds.
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(13), 2000, null);
+        focusMapCamera();
 
         mClusterManager = new ClusterManager<>(getContext(), mMap);
         mMap.setOnCameraIdleListener(mClusterManager);
@@ -283,6 +297,14 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         mClusterManager.cluster();
     }
 
+    private void focusMapCamera() {
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mSearchAddressLL, 13));
+        // Zoom in, animating the camera.
+        mMap.animateCamera(CameraUpdateFactory.zoomIn());
+        // Zoom out to zoom level 10, animating with a duration of 2 seconds.
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
+    }
 
     private Marker setHomeMarker() {
         Log.d(TAG, "setHomeMarker()");
@@ -295,6 +317,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         );
     }
 
+    @NonNull
     private Circle drawCircle(LatLng center) {
         // define center and radius (in meters) of the circle
         SharedPreferences sharedPref = getActivity()
@@ -314,45 +337,45 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         return mMap.addCircle(circleOptions);
     }
 
+    //create markers for all Kitas within the SearchRadius
     private void createKitaMarker() {
         Log.d(TAG, "createKitaMarker()");
 
-        Cursor allCursor = getAllKitasWithLocationsInRadius();
+        //clear Map of old stuff
+        mMap.clear();
 
-        //create markers for all Kitas within the raius (+ 0.5km) and display them "light"
+        // Cursor mittels Query von content provider holen
+        Cursor activeCursor = getActiveKitasWithLocations();
+
         Log.d(TAG, "vor Erstellen der Marker");
         // counter for debug
         int markerCount = 0;
         int rowsUpdated = 0;
 
-        // if allCursor exists, move row by row through the cursor
-        if (allCursor != null && allCursor.moveToFirst())
+        // if activeCursor exists, move row by row through the cursor
+        if (activeCursor != null && activeCursor.moveToFirst())
             do {
                 // get data from the cursor row
-                double kitaLat = allCursor.getDouble(COL_LAT);
-                double kitaLong = allCursor.getDouble(COL_LONG);
-                String kitaName = allCursor.getString(COL_NAME);
-                int kitaID = allCursor.getInt(COL_FK_KITA_ID);
+                double kitaLat = activeCursor.getDouble(COL_LAT);
+                double kitaLong = activeCursor.getDouble(COL_LONG);
+                String kitaName = activeCursor.getString(COL_NAME);
+                int kitaID = activeCursor.getInt(COL_FK_KITA_ID);
                 LatLng kitaPosition = new LatLng(kitaLat, kitaLong);
 
                 // create a marker from that data
-                Marker marker = mMap.addMarker(new MarkerOptions()
+                mMap.addMarker(new MarkerOptions()
                         .position(kitaPosition)
                         .visible(true)
-                        .alpha(0.25f)
-                        .icon(BitmapDescriptorFactory.defaultMarker(210))
+                        .icon(BitmapDescriptorFactory.defaultMarker(240))
                         .flat(true)
                         .title(kitaName)
                         .snippet(String.valueOf(kitaID))
                 );
 
-                // Add the marker to the sparse Array
-                mMarkerSparseArray.put(kitaID, marker);
-
-                // update this row for mapstatus "invisible"
+                // update this row for mapstatus "bold"
                 ContentValues contentValues = new ContentValues();
                 contentValues.put(KitaContract.LocationEntry.COLUMN_MAPST,
-                        getString(R.string.location_option_light));
+                        getString(R.string.location_option_bold));
                 int rowUpdated = getActivity().getContentResolver().update(
                         KitaContract.LocationEntry.CONTENT_URI,
                         contentValues,
@@ -362,16 +385,14 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
                 // count markers + updated rows
                 markerCount++;
                 rowsUpdated += rowUpdated;
-            } while (allCursor.moveToNext());
+            } while (activeCursor.moveToNext());
 
-        else Log.d(TAG, "allCursor == null");
+        else Log.d(TAG, "activeCursor == null");
 
-        if (allCursor != null) allCursor.close();
+        if (activeCursor != null) activeCursor.close();
 
         Log.d(TAG, "nach Erstellen der Marker. Marker created: " + markerCount +
         "\n Rows updated: " + rowsUpdated);
-
-
     }
 
     private void setKitaMarker() {
@@ -445,11 +466,10 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         if (activeCursor != null) activeCursor.close();
 
 
-        Log.d(TAG, "Marker are set.");
+        Log.d(TAG, "End of setKitaMarker()");
     }
 
-
-        public static class OverviewViewHolder extends RecyclerView.ViewHolder {
+    public static class OverviewViewHolder extends RecyclerView.ViewHolder {
             TextView name;
             TextView öffnungsz;
             TextView aufnahmea;
@@ -464,79 +484,6 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
 
             }
         }
-
-    private Cursor getAllKitasWithLocationsInRadius() {
-        Context context = getContext();
-        Activity activity = getActivity();
-
-        //open filter preferences
-        SharedPreferences sharedPref = activity.getSharedPreferences("filter",
-                Context.MODE_PRIVATE);
-
-        //get the filter settings for each filter
-        float searchRadius = (float) sharedPref.getInt(getString(R.string.search_radius), -1);
-        // translate searchRaduis value 0 to 0.5 km
-        if (searchRadius == 0) searchRadius = 0.5f;
-
-        //query All Kitas with location
-        return context.getContentResolver()
-                .query(KitaContract.KitaEntry.buildKitaUriWithLocation(
-                        context.getString(R.string.location_option_all)),
-                        null,
-                        KitaProvider.sDistanzSelection,
-                        new String[] {String.valueOf(1000 * searchRadius + 500)},
-                        null);
-    }
-
-//    private Cursor getLocationsInRadius() {
-//        Context context = getContext();
-//        Activity activity = getActivity();
-//
-//        //open filter preferences
-//        SharedPreferences sharedPref = activity.getSharedPreferences("filter",
-//                Context.MODE_PRIVATE);
-//
-//        //get the filter settings for each filter
-//        float searchRadius = (float) sharedPref.getInt(getString(R.string.search_radius), -1);
-//        // translate searchRaduis value 0 to 0.5 km
-//        if (searchRadius == 0) searchRadius = 0.5f;
-//
-//        //query all Kitas within given search radius
-//        return context.getContentResolver()
-//                .query(KitaContract.LocationEntry.CONTENT_URI,
-//                        null,
-//                        KitaProvider.sDistanzSelection + " AND "
-//                                + KitaProvider.sLocationKitaSelection,
-//                        new String[]{
-//                                String.valueOf(1000 * searchRadius + 500),
-//                                context.getString(R.string.location_option_all)},
-//                        null);
-//    }
-
-    private Cursor getVisibleLocations() {
-        Context context = getContext();
-        Activity activity = getActivity();
-
-        //open filter preferences
-        SharedPreferences sharedPref = activity.getSharedPreferences("filter",
-                Context.MODE_PRIVATE);
-
-        //get the filter settings for each filter
-        float searchRadius = (float) sharedPref.getInt(getString(R.string.search_radius), -1);
-        // translate searchRaduis value 0 to 0.5 km
-        if (searchRadius == 0) searchRadius = 0.5f;
-
-        //query all Kitas within given search radius
-        return context.getContentResolver()
-                .query(KitaContract.LocationEntry.CONTENT_URI,
-                        null,
-                        KitaProvider.sDistanzSelection + " AND "
-                                + KitaProvider.sLocationVisibleSelection,
-                        new String[]{
-                                context.getString(R.string.location_option_light),
-                                context.getString((R.string.location_option_bold))},
-                        null);
-    }
 
     private Cursor getActiveKitasWithLocations() {
         Context context = getContext();
@@ -566,7 +513,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
 
         //make array with all the values
         String[] filterValues = {
-                String.valueOf(1000 * searchRadius),
+                String.valueOf(1000 * searchRadius + 50), // +50 to get in line with ListView
                 String.valueOf(minAge),
                 String.valueOf(morningTime),
                 String.valueOf(eveningTime),
@@ -637,10 +584,8 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
 
     }
 
-    @Subscribe
-    public void initRecycleView(DistancesCalculatedTrigger event) {
-        // same effect as before, but different reason to trigger
-        setUpMap();
-    }
+
+
+
 
 }

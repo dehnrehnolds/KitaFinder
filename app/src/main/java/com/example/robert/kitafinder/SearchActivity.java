@@ -110,18 +110,13 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
             // Display the address string
             // or an error message sent from the intent service.
             Log.d(TAG, "onReceiveResults");
-            if (resultData != null) {
+            if (resultData != null && resultCode == Constants.SUCCESS_RESULT) {
                 mAddressInput.setText(
                         resultData.getString(Constants.RESULT_DATA_KEY)
                         .replace(", Deutschland", "")
                         .replace(", ", "\n")
                 );
-            }
-
-            // Show a toast message if an address was found.
-            if (resultCode == Constants.SUCCESS_RESULT) {
-                makeToast(getString(R.string.address_found));
-            }
+            } else makeToast("Service not available. Check internet connection");
 
         }
     }
@@ -185,7 +180,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
         final Button refreshAdd = findViewById(R.id.refresh_add_button);
         refreshAdd.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                startLocationUpdates();
+                if (googleApiClientConnected) startLocationUpdates();
                 getLastLocation();
             }
         });
@@ -198,7 +193,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
         seekBarRadius.setProgress(1);
         seekBarRadius.setSecondaryProgress(1);
         seekBarRadius.incrementProgressBy(1);
-        seekBarRadius.setMax(10);
+        seekBarRadius.setMax(5);
         final TextView seekBarRadiusValue = findViewById(R.id.search_radius_text);
         int searchRadius = filterPref.getInt(getString(R.string.search_radius), -1);
 
@@ -206,8 +201,8 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
             Log.d(TAG, "searchRadius <= 0");
             seekBarRadiusValue.setText(String.format("500m", searchRadius));
             seekBarRadius.setProgress(searchRadius);
-        } else if (searchRadius <= 10) {
-            Log.d(TAG, "searchRadius >0 und <10");
+        } else if (searchRadius <= 5) {
+            Log.d(TAG, "searchRadius >0 und <=5");
             seekBarRadiusValue.setText(String.format("%dkm", searchRadius));
             seekBarRadius.setProgress(searchRadius);
         } else
@@ -218,7 +213,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
             public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
                 if (progress == 0) {
                     seekBarRadiusValue.setText("500m");
-                } else if (progress <= 10) {
+                } else if (progress <= 5) {
                     seekBarRadiusValue.setText(String.format("%dkm", progress));
                 } else Log.e(TAG, "search Radius out of range");
             }
@@ -230,7 +225,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 Log.d(TAG, "seekBarRadius.getProgress() = " + seekBar.getProgress());
-                if (seekBar.getProgress() >= 0 && seekBar.getProgress() <= 10) {
+                if (seekBar.getProgress() >= 0 && seekBar.getProgress() <= 5) {
                     filterEditor.putInt(getString(R.string.search_radius), seekBar.getProgress());
                     Log.d(TAG, String.format("Put searchRadius %d to sharedPrefs.", seekBar.getProgress()));
                 } else {
@@ -306,9 +301,13 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                 if (!(mAddressInput.getText().toString().equals(""))) {
                     mEditTextAddress = new Location("Zu Hause");
                     Log.d(TAG, "Text found in EditText!");
-                    Log.d(TAG, "Address found: " + mAddressInput.getText().toString());
+                    Log.d(TAG, "AddressInput found: " + mAddressInput.getText().toString());
                     try {
                         mEditTextAddress = convertAddress(mAddressInput.getText().toString());
+                        if (mEditTextAddress == null){
+                            makeToast("Adresse nicht gefunden.");
+                            return;
+                        }
                         mAddressInput.setText(mEditTextAddress.getProvider()
                                 .replace(", Deutschland", "")
                                 .replace(", ", "\n"));
@@ -393,6 +392,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                     mAddressInputLayout.setHint("Adresse eingeben oder Standort verwenden...");
 //                    Toast.makeText(getApplicationContext(), "Got the focus", Toast.LENGTH_LONG).show();
                 } else {
+                    hideKeyboard(mAddressInput.getRootView());
 //                    Toast.makeText(getApplicationContext(), "Lost the focus", Toast.LENGTH_LONG).show();
                 }
             }
@@ -557,7 +557,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                 Log.d(TAG, "Location doesn't exists");
                 Log.w(TAG, "getLastLocation:exception");
                 makeToast(getString(R.string.no_location_detected));
-                startLocationUpdates();
+                if (googleApiClientConnected) startLocationUpdates();
             }
         }
 
@@ -659,6 +659,8 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
         Geocoder geoCoder = new Geocoder(this);
         Location locationFromAddress = new Location("Zu Hause");
         if (address != null && !address.isEmpty()) {
+            // if string does not contain "Berlin" or "berlin", add it to facilitate address search
+            if (!address.toLowerCase().contains("berlin")) address += ", Berlin";
             try {
                 List<Address> addressList = geoCoder.getFromLocationName(address, 1);
                 if (addressList != null && addressList.size() > 0) {
@@ -668,11 +670,25 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                     locationFromAddress.setLatitude(addressList.get(0).getLatitude());
                     locationFromAddress.setLongitude(addressList.get(0).getLongitude());
                     locationFromAddress.setProvider(addressList.get(0).getAddressLine(0));
-
+                }else{
+                    makeToast("Adresse nicht gefunden. Bitte Internetverbindung prüfen.");
+                    locationFromAddress.setProvider("Adresse nicht gefunden");
+                    // Address dummie in case no internaet connection for testing
+                    locationFromAddress.setLatitude(52.5445);
+                    locationFromAddress.setLongitude(13.437);
+                    locationFromAddress.setProvider("Dummie-Adresse");
+                    Log.d(TAG, "addressList == null");
+                    return null;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.e(TAG, e.getMessage());
+                makeToast("Adresse nicht gefunden. Bitte Internetverbindung prüfen.");
+                // Address dummie in case no internaet connection for testing
+                locationFromAddress.setLatitude(52.5445);
+                locationFromAddress.setLongitude(13.437);
+                locationFromAddress.setProvider("testadresse");
+
             }
         }
         return locationFromAddress;
