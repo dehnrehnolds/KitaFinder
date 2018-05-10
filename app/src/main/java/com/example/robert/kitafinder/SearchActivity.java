@@ -81,14 +81,6 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
     private TextInputEditText mAddressInput;
     private TextInputLayout mAddressInputLayout;
 
-
-//    private TextView mLatitudeText;
-//    private TextView mLongitudeText;
-//    private TextView mAccuracyText;
-//    private String mLatitudeLabel;
-//    private String mLongitudeLabel;
-//    private String mAccuracyLabel;
-
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
     private LocationRequest mLocationRequest = LocationRequest.create();
     private AddressResultReceiver mResultReceiver;
@@ -161,21 +153,6 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
             Log.d(TAG, "FetchDbFromCsv.execute()");
         }
 
-//        //---- Test query -----
-//
-//
-//        else Log.d(TAG, "queryC.moveToFirst() existiert nicht");
-//        Log.d(TAG, "number of rows: " +queryC.getCount());
-//        queryC.close();
-//        //  ^
-//        //  |
-
-//        final Button refreshLoc = findViewById(R.id.refresh_loc_button);
-//        refreshLoc.setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//                startLocationUpdates();
-//            }
-//        });
 
         final Button refreshAdd = findViewById(R.id.refresh_add_button);
         refreshAdd.setOnClickListener(new View.OnClickListener() {
@@ -236,15 +213,6 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
             }
         });
 
-
-//        mLatitudeLabel = getResources().getString(R.string.latitude_label);
-//        mLongitudeLabel = getResources().getString(R.string.longitude_label);
-//        mAccuracyLabel = getResources().getString(R.string.accuracy_label);
-//        mLatitudeText = (TextView) findViewById((R.id.latitude_text));
-//        mLongitudeText = (TextView) findViewById((R.id.longitude_text));
-//        mAccuracyText = (TextView) findViewById(R.id.accuracy_text);
-//        mAddressText = (TextView) findViewById(R.id.address_text);
-
         mResultReceiver = new AddressResultReceiver(new Handler());
 
         final Button searchB = findViewById(R.id.search_button);
@@ -281,57 +249,20 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
             }
         });
 
+        restoreLastSearchAddress();
+
         searchB.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-
                 // creating intent for launching ResultActivity
                 Intent ButtonIntent = new Intent(v.getContext(), ResultActivity.class);
                 // opening SharedPrefs & editor
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
                 SharedPreferences.Editor editor = prefs.edit();
 
-                // if no LastSearchAdress is stored in the activities intent, try to get the
-                // address last saved to the DB
-                if (mLastSearchAddress == null) {
-                    Log.d(TAG, "mLastSearchAddress == null and replace by DB entry 'Zu Hause'");
-                    mLastSearchAddress = new Location("Zu Hause");
-                    String selection = KitaContract.LocationEntry.COLUMN_MAPST + " = ?";
-                    String[] args = new String[]{"3"};
 
-                    Cursor addressCursor = getContentResolver().query(
-                            KitaContract.LocationEntry.CONTENT_URI,
-                            null,
-                            selection,
-                            args,
-                            null);
-
-                    if (addressCursor != null && addressCursor.moveToFirst()) {
-                        double addressLat = addressCursor.getDouble(Constants.COL_LAT);
-                        double addressLong = addressCursor.getDouble(Constants.COL_LONG);
-                        mLastSearchAddress.setLatitude(addressLat);
-                        mLastSearchAddress.setLongitude(addressLong);
-                        addressCursor.close();
-                    } else {
-                        Log.e(TAG, "No Last searchAddress found");
-                        // set dummie address in case of first launch
-                        mLastSearchAddress.setLatitude(33);
-                        mLastSearchAddress.setLongitude(45);
-                        ContentValues contentV = new ContentValues();
-                        contentV.put(KitaContract.LocationEntry.COLUMN_LAT, 33.0);
-                        contentV.put(KitaContract.LocationEntry.COLUMN_LONG, 45.0);
-                        contentV.put(KitaContract.LocationEntry.COLUMN_DIST, -1.0);
-                        contentV.put(KitaContract.LocationEntry.COLUMN_MAPST, 3);
-                        contentV.put(KitaContract.LocationEntry.COLUMN_TYPE, 3);
-                        contentV.put(KitaContract.LocationEntry.COLUMN_FK_KITA_ID, -3);
-                        getContentResolver().insert(KitaContract.LocationEntry.CONTENT_URI,
-                                contentV);
-                    }
-
-                } else {
-                    mAddressInput.setText(mLastSearchAddress.getProvider());
-                }
 
                 if (!(mAddressInput.getText().toString().equals(""))) {
+                    Log.d(TAG, "mAddressInput: " + mAddressInput.getText().toString());
                     mEditTextAddress = new Location("Zu Hause");
                     Log.d(TAG, "Text found in EditText!");
                     Log.d(TAG, "AddressInput found: " + mAddressInput.getText().toString());
@@ -360,35 +291,6 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                     Log.d(TAG, "editTextAddress used for ButtonIntent of ResultActivity");
                     mLastSearchAddress = mEditTextAddress;
                     editor.apply();
-
-//                } else if (mLocationExists) {
-//                    Log.d(TAG, "Using device location or previously stored location");
-//
-//                    // is the address last used different to the new Location (>50m)
-//                    if (mLastSearchAddress.distanceTo(mLastLocation) > 50) {
-//                        Log.d(TAG, "mLastSearchAddress:");
-//                        Log.d(TAG, "    Lat: " + mLastSearchAddress.getLatitude());
-//                        Log.d(TAG, "    Long: " + mLastSearchAddress.getLongitude());
-//                        Log.d(TAG, "mLastLocation:");
-//                        Log.d(TAG, "    Lat: " + mLastLocation.getLatitude());
-//                        Log.d(TAG, "    Long: " + mLastLocation.getLongitude());
-//                        editor.putBoolean(getString(R.string.pref_address_changed_list), true);
-//                        editor.putBoolean(getString(R.string.pref_address_changed_map), true);
-//                        Log.d(TAG, "    addressChanged changed to true");
-//                        //saving the address
-//                        ButtonIntent.putExtra("address", mLastLocation);
-//                        Log.d(TAG, "mLastLocation used for ButtonIntent of ResultActivity");
-//                        mLastSearchAddress = mLastLocation;
-//
-//                        // if the address last used is the same (<50m) as the new address, use the old
-//                        // address and thatfore distances won't be newly calculated in ListFragment
-//                    } else {
-//                        editor.putBoolean(getString(R.string.pref_address_changed_list), false);
-//                        editor.putBoolean(getString(R.string.pref_address_changed_map), false);
-//                        Log.d(TAG, "    addressChanged changed to false");
-//                        ButtonIntent.putExtra("address", mLastSearchAddress);
-//                        Log.d(TAG, "mLastSearchAddress used for ButtonIntent of ResultActivity");
-//                    }
                 } else {
                     makeToast("Keine Adresse für die Suche angegeben");
                     return;
@@ -633,27 +535,48 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
         }
     }
 
-    private void makeToast(final String text) {
-        Toast addressFoundToast = Toast.makeText(this,
-                text,
-                Toast.LENGTH_SHORT
-        );
-        addressFoundToast.show();
-    }
+    private void restoreLastSearchAddress(){
+        // if no LastSearchAdress is stored in the activities intent, try to get the
+        // address last saved to the DB
+        if (mLastSearchAddress == null) {
+            Log.d(TAG, "mLastSearchAddress == null and replace by DB entry 'Zu Hause'");
+            mLastSearchAddress = new Location("Zu Hause");
+            String selection = KitaContract.LocationEntry.COLUMN_MAPST + " = ?";
+            String[] args = new String[]{"3"};
 
-    /**
-     * Shows a {@link Snackbar}.
-     *
-     * @param mainTextStringId The id for the string resource for the Snackbar text.
-     * @param actionStringId   The text of the action item.
-     * @param listener         The listener associated with the Snackbar action.
-     */
-    private void showSnackbar(final int mainTextStringId, final int actionStringId,
-                              View.OnClickListener listener) {
-        Snackbar.make(findViewById(android.R.id.content),
-                getString(mainTextStringId),
-                Snackbar.LENGTH_INDEFINITE)
-                .setAction(getString(actionStringId), listener).show();
+            Cursor addressCursor = getContentResolver().query(
+                    KitaContract.LocationEntry.CONTENT_URI,
+                    null,
+                    selection,
+                    args,
+                    null);
+
+            if (addressCursor != null && addressCursor.moveToFirst()) {
+                double addressLat = addressCursor.getDouble(Constants.COL_LAT);
+                double addressLong = addressCursor.getDouble(Constants.COL_LONG);
+                mLastSearchAddress.setLatitude(addressLat);
+                mLastSearchAddress.setLongitude(addressLong);
+                addressCursor.close();
+            } else {
+                Log.e(TAG, "No Last searchAddress found");
+                // set dummie address in case of first launch
+                mLastSearchAddress.setLatitude(33);
+                mLastSearchAddress.setLongitude(45);
+                ContentValues contentV = new ContentValues();
+                contentV.put(KitaContract.LocationEntry.COLUMN_LAT, 33.0);
+                contentV.put(KitaContract.LocationEntry.COLUMN_LONG, 45.0);
+                contentV.put(KitaContract.LocationEntry.COLUMN_DIST, -1.0);
+                contentV.put(KitaContract.LocationEntry.COLUMN_MAPST, 3);
+                contentV.put(KitaContract.LocationEntry.COLUMN_TYPE, 3);
+                contentV.put(KitaContract.LocationEntry.COLUMN_FK_KITA_ID, -3);
+                getContentResolver().insert(KitaContract.LocationEntry.CONTENT_URI,
+                        contentV);
+            }
+
+        } else {
+            Log.d(TAG, "mAddressInput.setText(mLastSearchAddress.getProvider())");
+            mAddressInput.setText(mLastSearchAddress.getProvider());
+        }
     }
 
     public Location convertAddress(String address) {
@@ -704,6 +627,29 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
         if (view == null) {
             view = new View(context);
         }
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        if (imm != null) imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    private void makeToast(final String text) {
+        Toast addressFoundToast = Toast.makeText(this,
+                text,
+                Toast.LENGTH_SHORT
+        );
+        addressFoundToast.show();
+    }
+
+    /**
+     * Shows a {@link Snackbar}.
+     *
+     * @param mainTextStringId The id for the string resource for the Snackbar text.
+     * @param actionStringId   The text of the action item.
+     * @param listener         The listener associated with the Snackbar action.
+     */
+    private void showSnackbar(final int mainTextStringId, final int actionStringId,
+                              View.OnClickListener listener) {
+        Snackbar.make(findViewById(android.R.id.content),
+                getString(mainTextStringId),
+                Snackbar.LENGTH_INDEFINITE)
+                .setAction(getString(actionStringId), listener).show();
     }
 }
