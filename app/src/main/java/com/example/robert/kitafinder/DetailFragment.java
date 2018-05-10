@@ -1,10 +1,12 @@
 package com.example.robert.kitafinder;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
@@ -14,11 +16,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.robert.kitafinder.data.Constants;
 import com.example.robert.kitafinder.data.KitaContract;
+import com.example.robert.kitafinder.data.KitaProvider;
 
 import org.apache.commons.lang3.text.WordUtils;
 
@@ -31,6 +35,7 @@ public class DetailFragment extends Fragment {
     private static final String TAG = DetailFragment.class.getSimpleName();
     private static String mPhoneNo = "";
     private static String mEmail = "";
+    private static Boolean mIsFav = false;
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -141,6 +146,16 @@ public class DetailFragment extends Fragment {
         if (plzNo.equals("")) plz.setText("k.A.");
         else plz.setText(plzNo.substring(0,plzNo.indexOf("(")));
 
+        final FloatingActionButton favButton = getActivity().findViewById(R.id.favourite_button);
+
+        if (isFav( cursor.getInt(Constants.COL_KITAID))) {
+            Log.d(TAG, "bindView isFav");
+            favButton.setImageResource(R.drawable.ic_favorite_white_24dp);
+        } else {
+            Log.d(TAG, "bindView !isFav");
+            favButton.setImageResource(R.drawable.ic_favorite_border_white_24dp);
+        }
+
         mail.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -164,6 +179,59 @@ public class DetailFragment extends Fragment {
                 else makeToast(getString(R.string.no_phone_toast));
             }
         });
+
+
+        favButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                int kitaId = cursor.getInt(Constants.COL_KITAID);
+                Uri kitaUri = KitaContract.KitaEntry.CONTENT_URI;
+
+                if (isFav(kitaId)) {
+                    Log.d(TAG, "onClick mIsFav");
+                    favButton.setImageResource(R.drawable.ic_favorite_border_white_24dp);
+                    ContentValues contentValuesUnFav = new ContentValues();
+                    contentValuesUnFav.put(KitaContract.KitaEntry.COLUMN_FAV, "false");
+                    int updatedRows = getContext().getContentResolver().update(
+                            kitaUri,
+                            contentValuesUnFav,
+                            KitaContract.KitaEntry._ID+ " = ?",
+                            new String[] {String.valueOf(kitaId)}
+                    );
+                    Log.d(TAG,"Unfaved Kita-Id "+kitaId+ "and updated "+updatedRows+" rows");
+                } else {
+                    Log.d(TAG, "onClick !mIsFav");
+                    favButton.setImageResource(R.drawable.ic_favorite_white_24dp);
+                    ContentValues contentValuesUnFav = new ContentValues();
+                    contentValuesUnFav.put(KitaContract.KitaEntry.COLUMN_FAV, "true");
+                    int updatedRows = getContext().getContentResolver().update(
+                            kitaUri,
+                            contentValuesUnFav,
+                            KitaContract.KitaEntry._ID+ " = ?",
+                            new String[] {String.valueOf(kitaId)}
+                    );
+                    Log.d(TAG,"Faved Kita-Id "+kitaId+ "and updated "+updatedRows+" rows");
+                }
+            }
+        });
+    }
+
+    private Boolean isFav(Integer kitaId){
+        Log.d(TAG, "isFav()");
+        Uri kitaUri = KitaContract.KitaEntry.CONTENT_URI;
+        Cursor favCursor = getContext().getContentResolver().query(
+                kitaUri,
+                new String[]{KitaContract.KitaEntry.COLUMN_FAV},
+                KitaContract.KitaEntry._ID+ " = ?",
+                new String[] {String.valueOf(kitaId)},
+                null
+        );
+        String isFavString = "";
+        //Get string from freschly queried cursor
+        if (favCursor.moveToFirst()) isFavString = (favCursor.getString(0));
+        //make Boolean from String
+        return Boolean.parseBoolean(isFavString);
 
     }
 

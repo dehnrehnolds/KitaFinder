@@ -274,7 +274,7 @@ public class RvAdapter extends RecyclerViewCursorAdapter<RvAdapter.OverviewViewH
                 "%2.1f km",
                 kitaDistanz/1000
         ));
-        else Log.d(TAG,"ERROR Distance= " + kitaDistanz);
+        else Log.e(TAG,"ERROR Distance= " + kitaDistanz);
 
         // Bind Fav-Logo (muss die Datenbank fresch callen, weil der cursor bei hin-und her scrollen
         // eventuell noch ncihts davon weiß)

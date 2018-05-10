@@ -72,20 +72,18 @@ public class ListFragment extends Fragment{
         Log.d(TAG, "addressChanged: " +addressChanged);
 
         if (addressChanged) {
-
             new GetDistanceTask(activity).execute();
             Log.d(TAG, "GetDistanceTask.execute()");
             editor.putBoolean(getString(R.string.pref_address_changed_list), false);
             editor.apply();
-        } else {
-            setAdapter();
-        }
-
+        } else setAdapter();
         return rootView;
     }
 
     @Override
     public void onStart() {
+        Log.d(TAG, "onStart()");
+        setAdapter();
         super.onStart();
         EventBus.getDefault().register(this);
     }
@@ -99,12 +97,10 @@ public class ListFragment extends Fragment{
 
     private void setAdapter(){
 
-
         // get the active filter TODO
         mAdapter = new RvAdapter(mContext,"none", new RvAdapter.ClickListener() {
             @Override
             public void onPositionClicked(int position, int kitaId) {
-
             }
 
             @Override
@@ -112,7 +108,6 @@ public class ListFragment extends Fragment{
                 Log.d(TAG, "Long-clicked on: -position: "+position+"  -kitaId: "+ kitaId);
             }
         });
-
         mRecyclerView.setAdapter(mAdapter);
     }
 
