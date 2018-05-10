@@ -248,6 +248,39 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
         mResultReceiver = new AddressResultReceiver(new Handler());
 
         final Button searchB = findViewById(R.id.search_button);
+
+        mAddressInput = findViewById(R.id.address_input);
+        mAddressInputLayout = findViewById(R.id.address_input_layout);
+
+        mAddressInput.setHint("Adresse eingeben\noder Standort verwenden...");
+        mAddressInput.setImeOptions(EditorInfo.IME_ACTION_SEARCH);
+        mAddressInput.setRawInputType(InputType.TYPE_CLASS_TEXT);
+
+        mAddressInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    searchB.performClick();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        mAddressInput.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean hasFocus) {
+                if (hasFocus) {
+                    mAddressInput.setHint("");
+                    mAddressInputLayout.setHint("Adresse eingeben oder Standort verwenden...");
+//                    Toast.makeText(getApplicationContext(), "Got the focus", Toast.LENGTH_LONG).show();
+                } else {
+                    hideKeyboard(mAddressInput.getRootView());
+//                    Toast.makeText(getApplicationContext(), "Lost the focus", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
         searchB.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
@@ -295,7 +328,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                     }
 
                 } else {
-                    Log.d(TAG, "mLastSearchAddress != null");
+                    mAddressInput.setText(mLastSearchAddress.getProvider());
                 }
 
                 if (!(mAddressInput.getText().toString().equals(""))) {
@@ -363,38 +396,6 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                 v.getContext().startActivity(ButtonIntent);
                 hideKeyboard(v);
 
-            }
-        });
-
-        mAddressInput = findViewById(R.id.address_input);
-        mAddressInputLayout = findViewById(R.id.address_input_layout);
-
-        mAddressInput.setHint("Adresse eingeben\noder Standort verwenden...");
-        mAddressInput.setImeOptions(EditorInfo.IME_ACTION_SEARCH);
-        mAddressInput.setRawInputType(InputType.TYPE_CLASS_TEXT);
-
-        mAddressInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    searchB.performClick();
-                    return true;
-                }
-                return false;
-            }
-        });
-
-        mAddressInput.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View view, boolean hasFocus) {
-                if (hasFocus) {
-                    mAddressInput.setHint("");
-                    mAddressInputLayout.setHint("Adresse eingeben oder Standort verwenden...");
-//                    Toast.makeText(getApplicationContext(), "Got the focus", Toast.LENGTH_LONG).show();
-                } else {
-                    hideKeyboard(mAddressInput.getRootView());
-//                    Toast.makeText(getApplicationContext(), "Lost the focus", Toast.LENGTH_LONG).show();
-                }
             }
         });
 

@@ -64,6 +64,9 @@ import static com.example.robert.kitafinder.data.Constants.COL_LAT;
 import static com.example.robert.kitafinder.data.Constants.COL_LONG;
 import static com.example.robert.kitafinder.data.Constants.COL_NAME;
 import static com.example.robert.kitafinder.data.Constants.COL_ÖFFNUNGSZ;
+import static com.example.robert.kitafinder.data.Constants.IJ_COL_LAT;
+import static com.example.robert.kitafinder.data.Constants.IJ_COL_LONG;
+import static com.example.robert.kitafinder.data.Constants.IJ_COL_NAME;
 
 /**
  * Created by Robert on 23.10.2017.
@@ -73,7 +76,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         GoogleMap.OnInfoWindowClickListener {
 
     /**
-     * Demonstrates customizing the info window and/or its contents.
+     * Customizing the info window contents
      */
     class CustomInfoWindowAdapter implements GoogleMap.InfoWindowAdapter {
 
@@ -356,9 +359,10 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         if (activeCursor != null && activeCursor.moveToFirst())
             do {
                 // get data from the cursor row
-                double kitaLat = activeCursor.getDouble(COL_LAT);
-                double kitaLong = activeCursor.getDouble(COL_LONG);
-                String kitaName = activeCursor.getString(COL_NAME);
+                double kitaLat = activeCursor.getDouble(IJ_COL_LAT);
+                double kitaLong = activeCursor.getDouble(IJ_COL_LONG);
+                String kitaName = activeCursor.getString(IJ_COL_NAME);
+                Log.d(TAG, kitaName);
                 int kitaID = activeCursor.getInt(COL_FK_KITA_ID);
                 LatLng kitaPosition = new LatLng(kitaLat, kitaLong);
 

@@ -80,6 +80,7 @@
 
     <TextView
         android:id="@+id/web_value"
+        android:autoLink="web"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/bullet_points_horizontal_column"
@@ -90,9 +91,12 @@
 
     <TextView
         android:id="@+id/mail_value"
+        android:clickable="true"
+        android:focusable="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/bullet_points_horizontal_column"
+        android:textColor="@color/colorAccent"
         android:text="preussstrasse@ina-kindergarten.de"
         app:layout_constraintBottom_toBottomOf="@+id/mail_title"
         app:layout_constraintStart_toEndOf="@+id/mail_title"

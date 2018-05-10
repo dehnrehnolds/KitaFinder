@@ -1,17 +1,21 @@
 package com.example.robert.kitafinder;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
+import android.text.SpannableString;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.robert.kitafinder.data.Constants;
 import com.example.robert.kitafinder.data.KitaContract;
@@ -25,6 +29,8 @@ import org.apache.commons.lang3.text.WordUtils;
 public class DetailFragment extends Fragment {
 
     private static final String TAG = DetailFragment.class.getSimpleName();
+    private static String mPhoneNo = "";
+    private static String mEmail = "";
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -53,11 +59,11 @@ public class DetailFragment extends Fragment {
         return rootView;
     }
 
-    private void bindViews(View rootView, Cursor cursor) {
+    private void bindViews(View rootView, final Cursor cursor) {
 
         TextView name = rootView.findViewById(R.id.name_value);
         String kitaName = cursor.getString(Constants.COL_NAME);
-        final int maxNameLength = 50;
+        final int maxNameLength = 40;
         if (kitaName.length()>maxNameLength)
             while (kitaName.length()>maxNameLength){
             if (kitaName.indexOf(" ")>0) kitaName = kitaName.substring(0,kitaName.lastIndexOf(" "));
@@ -87,13 +93,38 @@ public class DetailFragment extends Fragment {
 
         TextView phone = rootView.findViewById(R.id.phone_value);
         String phoneNo = cursor.getString(Constants.COL_TELEFON);
-        if (phoneNo.equals("")) phone.setText("k.A.");
-        else phone.setText(phoneNo);
+        if (phoneNo.equals("") || phoneNo.equals("030")) {
+            Log.d(TAG,"k.A.");
+            phone.setText("k.A.");
+            mPhoneNo = "";
+        } else if (!phoneNo.substring(0,3).equals("030")) {
+            Log.d(TAG, "substring: " + phoneNo.substring(0,2));
+            Log.d(TAG,"030");
+            mPhoneNo = "030" + phoneNo;
+            phone.setText(mPhoneNo);
+        } else if (phoneNo.substring(0,6).equals("030030")){
+            Log.d(TAG,"030030");
+            mPhoneNo = phoneNo.substring(3);
+            phone.setText(mPhoneNo);
+            Log.d(TAG, "mPhoneNo: " + mPhoneNo);
+        } else {
+            Log.d(TAG,"phoneNo");
+            mPhoneNo = phoneNo;
+            phone.setText(phoneNo);
+        }
 
         TextView mail = rootView.findViewById(R.id.mail_value);
         String mailAdd = cursor.getString(Constants.COL_EMAIL);
-        if (mailAdd.equals("")) mail.setText("k.A.");
-        else mail.setText(mailAdd);
+        if (mailAdd.equals("")){
+            mail.setText("k.A.");
+            mEmail = "";
+        }
+        else {
+            mEmail = mailAdd;
+            SpannableString mailSS = new SpannableString(mailAdd);
+            mailSS.setSpan(new UnderlineSpan(), 0, mailSS.length(), 0);
+            mail.setText(mailSS);
+        }
 
         TextView web = rootView.findViewById(R.id.web_value);
         String webSite = cursor.getString(Constants.COL_WEB);
@@ -110,8 +141,72 @@ public class DetailFragment extends Fragment {
         if (plzNo.equals("")) plz.setText("k.A.");
         else plz.setText(plzNo.substring(0,plzNo.indexOf("(")));
 
+        mail.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String mailAdd = cursor.getString(Constants.COL_EMAIL);
+                composeEmail(mailAdd);
+            }
+        });
+
+        getActivity().findViewById(R.id.mail_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!mEmail.equals("")) composeEmail(mEmail);
+                else makeToast(getString(R.string.no_mail_toast));
+            }
+        });
+
+        getActivity().findViewById(R.id.button_call).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!mPhoneNo.equals("")) callKita(mPhoneNo);
+                else makeToast(getString(R.string.no_phone_toast));
+            }
+        });
+
     }
-    
+
+    public void composeEmail(String address) {
+        Intent intent = new Intent(Intent.ACTION_SENDTO);
+        intent.setData(Uri.parse("mailto:" + address));
+        intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.mail_subject));
+        intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.mail_text));
+        if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+            try {
+                startActivity(intent);
+                Log.d(TAG, "startActivity() - Mail");
+            } catch (Error e){
+                e.printStackTrace();
+                Log.e(TAG, e.getMessage());
+            }
+
+        }
+    }
+
+    public void callKita(String telNumber) {
+        Log.d(TAG, " callKita ()");
+        Intent intent = new Intent(Intent.ACTION_DIAL);
+        intent.setData(Uri.parse("tel:" + telNumber));
+        if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+            try {
+                startActivity(intent);
+                Log.d(TAG, "startActivity() - Call");
+            } catch (Error e){
+                e.printStackTrace();
+                Log.e(TAG, e.getMessage());
+            }
+
+        }
+    }
+
+    private void makeToast(final String text) {
+        Toast addressFoundToast = Toast.makeText(getContext(),
+                text,
+                Toast.LENGTH_SHORT
+        );
+        addressFoundToast.show();
+    }
 
     private void showSnackbar(final String text, View view) {
         View container = view.findViewById(R.id.detail_fragment);
