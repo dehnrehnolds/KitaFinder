@@ -192,7 +192,8 @@ public class DetailFragment extends Fragment {
                     Log.d(TAG, "onClick mIsFav");
                     favButton.setImageResource(R.drawable.ic_favorite_border_white_24dp);
                     ContentValues contentValuesUnFav = new ContentValues();
-                    contentValuesUnFav.put(KitaContract.KitaEntry.COLUMN_FAV, "false");
+                    contentValuesUnFav.put(KitaContract.KitaEntry.COLUMN_FAV,
+                            getString(R.string.status_not_fav));
                     int updatedRows = getContext().getContentResolver().update(
                             kitaUri,
                             contentValuesUnFav,
@@ -204,7 +205,8 @@ public class DetailFragment extends Fragment {
                     Log.d(TAG, "onClick !mIsFav");
                     favButton.setImageResource(R.drawable.ic_favorite_white_24dp);
                     ContentValues contentValuesUnFav = new ContentValues();
-                    contentValuesUnFav.put(KitaContract.KitaEntry.COLUMN_FAV, "true");
+                    contentValuesUnFav.put(KitaContract.KitaEntry.COLUMN_FAV,
+                            getString(R.string.status_fav));
                     int updatedRows = getContext().getContentResolver().update(
                             kitaUri,
                             contentValuesUnFav,
@@ -231,7 +233,9 @@ public class DetailFragment extends Fragment {
         //Get string from freschly queried cursor
         if (favCursor.moveToFirst()) isFavString = (favCursor.getString(0));
         //make Boolean from String
-        return Boolean.parseBoolean(isFavString);
+        if (!isFavString.equals(getString(R.string.status_not_fav)))
+            return true;
+        else return false;
 
     }
 

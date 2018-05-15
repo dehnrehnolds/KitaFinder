@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/fav_list_item"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:paddingStart="@dimen/parent_horizontal_padding"
+    android:paddingEnd="@dimen/parent_horizontal_padding"
+    android:paddingBottom="@dimen/list_item_vertical_padding">
+
+    <TextView
+        android:id="@+id/kita_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:maxLines="3"
+        android:maxWidth="120dp"
+        android:minLines="2"
+        android:text="Kita Sonnenschein"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/kita_öffnungszeiten"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/kita_fav"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="4dp"
+        android:background="@drawable/rounded_corner_fav_active"
+        android:contentDescription="@string/status_fav"
+        android:padding="8dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_favorite_border_black_24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/kita_mail"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/kita_mail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="4dp"
+        android:background="@drawable/rounded_corner_fav_inactive"
+        android:contentDescription="@string/status_mail_sent"
+        android:padding="4dp"
+        android:src="@drawable/ic_mail_outline_black_24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/kita_wait"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/kita_wait"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="4dp"
+        android:background="@drawable/rounded_corner_fav_inactive"
+        android:contentDescription="@string/status_waiting_list"
+        android:padding="4dp"
+        android:src="@drawable/ic_access_time_black_24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/kita_declined"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/kita_declined"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="4dp"
+        android:background="@drawable/rounded_corner_fav_inactive"
+        android:contentDescription="@string/status_declined"
+        android:padding="4dp"
+        android:src="@drawable/ic_dialog_close_light"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/kita_approved"
+        app:layout_constraintTop_toTopOf="parent" />+
+
+    <ImageButton
+        android:id="@+id/kita_approved"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/rounded_corner_fav_inactive"
+        android:contentDescription="@string/status_waiting_list"
+        android:padding="4dp"
+        android:src="@drawable/ic_check_black_24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/kita_distanz"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="3,2 km"
+        android:textColor="@color/black"
+        app:layout_constraintStart_toStartOf="@+id/kita_name"
+        app:layout_constraintTop_toBottomOf="@+id/kita_name" />
+
+
+</android.support.constraint.ConstraintLayout>

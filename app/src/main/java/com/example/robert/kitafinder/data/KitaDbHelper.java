@@ -13,7 +13,7 @@ public class KitaDbHelper extends SQLiteOpenHelper {
 
     private static final String TAG = KitaDbHelper.class.getSimpleName();
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 28;
+    private static final int DATABASE_VERSION = 31;
 
     static final String DATABASE_NAME = "kita.db";
 
@@ -46,7 +46,7 @@ public class KitaDbHelper extends SQLiteOpenHelper {
                 KitaContract.KitaEntry.COLUMN_ÖFFNUNGSZ + " TEXT NOT NULL, " +
                 KitaContract.KitaEntry.COLUMN_AUFNAHMEA + " INT NOT NULL, " +
                 KitaContract.KitaEntry.COLUMN_FREMDSP + " TEXT NOT NULL, " +
-                KitaContract.KitaEntry.COLUMN_FAV + " BOOLEAN NOT NULL, " +
+                KitaContract.KitaEntry.COLUMN_FAV + " TEXT NOT NULL, " +
 
                 "UNIQUE (" + KitaContract.KitaEntry.COLUMN_NAME + ", " +
                 KitaContract.KitaEntry.COLUMN_EMAIL + ") ON CONFLICT REPLACE);";

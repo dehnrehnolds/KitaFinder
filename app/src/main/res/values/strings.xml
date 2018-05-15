@@ -48,6 +48,14 @@
         Bitte tragen Sie uns auf Ihre Warteliste ein.\n\n\n Mit freundlichen Grüßen \n\n **Name**
     </string>
 
+    <!-- Favourite Fragment -->
+    <string name="status_not_fav">notFav</string>
+    <string name="status_fav">fav</string>
+    <string name="status_mail_sent">sent</string>
+    <string name="status_waiting_list">waitingList</string>
+    <string name="status_declined">declined</string>
+    <string name="status_approved">approved</string>
+
     <!-- Filter Fragment -->
     <string name="filter_title_replace">Filter</string>
     <string name="filter_title">Active filters:</string>

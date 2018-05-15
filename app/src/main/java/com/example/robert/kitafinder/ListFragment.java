@@ -1,7 +1,6 @@
 package com.example.robert.kitafinder;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -98,7 +97,7 @@ public class ListFragment extends Fragment{
     private void setAdapter(){
 
         // get the active filter TODO
-        mAdapter = new RvAdapter(mContext,"none", new RvAdapter.ClickListener() {
+        mAdapter = new ListAdapter(mContext,"none", new ListAdapter.ClickListener() {
             @Override
             public void onPositionClicked(int position, int kitaId) {
             }

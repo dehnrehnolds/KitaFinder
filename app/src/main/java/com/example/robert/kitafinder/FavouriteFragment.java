@@ -28,20 +28,19 @@ public class FavouriteFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final Context context = getContext();
-        final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_fav, container, false);
 
-        mRecyclerView = rootView.findViewById(R.id.kita_list);
+        mRecyclerView = rootView.findViewById(R.id.fav_list);
 
-        // use this setting to improve performance if you know that changes
-        // in content do not change the layout size of the RecyclerView
+        // to improve performance
         mRecyclerView.setHasFixedSize(true);
 
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(context);
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        // get the active filter TODO
-        mAdapter = new RvAdapter(context, "favourites", new RvAdapter.ClickListener() {
+        // create FavAdapter
+        mAdapter = new FavAdapter(context, new FavAdapter.ClickListener() {
             @Override
             public void onPositionClicked(int position, int kitaId) {
 
@@ -54,6 +53,7 @@ public class FavouriteFragment extends Fragment {
         });
 
         mRecyclerView.setAdapter(mAdapter);
+
         return rootView;
     }
 

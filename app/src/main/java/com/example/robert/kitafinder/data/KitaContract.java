@@ -89,7 +89,7 @@ public class KitaContract {
         // foreign languages spoken in the Kita (format: deutsch-xxx, e.g.: deutsch-spanisch)
         public static final String COLUMN_FREMDSP = "fremdsprache";
 
-        //set "true" if row is sset as favourite
+        //Kita Status can be "notFav", "fav", "mailSent", "declined" or "approved"
         public static final String COLUMN_FAV = "favorit";
 
         public static Uri buildKitaUri(long id) {

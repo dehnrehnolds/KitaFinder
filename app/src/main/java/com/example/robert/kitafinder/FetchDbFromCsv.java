@@ -77,7 +77,8 @@ public class FetchDbFromCsv  extends AsyncTask<Void, Integer, Integer> {
                 contentVKita.put(KitaContract.KitaEntry.COLUMN_ÖFFNUNGSZ, nextLine[14]);
                 contentVKita.put(KitaContract.KitaEntry.COLUMN_AUFNAHMEA, nextLine[15]);
                 contentVKita.put(KitaContract.KitaEntry.COLUMN_FREMDSP, nextLine[16]);
-                contentVKita.put(KitaContract.KitaEntry.COLUMN_FAV, "false");
+                contentVKita.put(KitaContract.KitaEntry.COLUMN_FAV,
+                        mContext.getString(R.string.status_not_fav));
 
                 contentVLoc.put(KitaContract.LocationEntry.COLUMN_TYPE, 0); //all csv-entries = kita
                 contentVLoc.put(KitaContract.LocationEntry.COLUMN_LAT, Float.parseFloat(nextLine[6]));
