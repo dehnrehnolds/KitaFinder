@@ -163,29 +163,6 @@ public class ListAdapter extends RecyclerViewCursorAdapter<ListAdapter.OverviewV
             swapCursor(cursor);
         }
         else Log.e(TAG, "(Cursor == null) after query");
-
-//        //Test Output
-//        if (kitaCursor != null){
-//            kitaCursor.moveToFirst();
-//            while (!kitaCursor.isAfterLast()) {
-//                Log.d(TAG, "cursor move to First! Columns: " + kitaCursor.getColumnCount()
-//                        + " String and der Stelle 1: " + kitaCursor.getString(1)
-//                        + "Column count: " + kitaCursor.getColumnCount());
-//                Log.d(TAG, "Kita_ID: " + kitaCursor.getLong(COL_KITAID));
-//                kitaCursor.moveToNext();
-//            }
-//        } else Log.e(TAG, "NOT cursor.moveToFirst()!");
-//
-//        if (locCursor != null){
-//            locCursor.moveToFirst();
-//            while (!locCursor.isAfterLast()) {
-//                Log.d(TAG, "cursor move to First! Columns: " + locCursor.getColumnCount()
-//                        + " String and der Stelle 1: " + locCursor.getString(1)
-//                        + "Column count: " + locCursor.getColumnCount());
-//                Log.d(TAG, "Kita_Foreign_ID: " + locCursor.getLong(COL_FK_KITA_ID));
-//                locCursor.moveToNext();
-//            }
-//        } else Log.e(TAG, "NOT cursor.moveToFirst()!");
     }
 
     @Override

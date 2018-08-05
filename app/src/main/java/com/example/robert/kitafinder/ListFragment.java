@@ -1,8 +1,8 @@
 package com.example.robert.kitafinder;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -15,7 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.robert.kitafinder.data.DistancesCalculatedTrigger;
-import com.example.robert.kitafinder.data.RefreshTrigger;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -31,6 +30,7 @@ public class ListFragment extends Fragment{
     private  RecyclerView.Adapter mAdapter;
     private LinearLayoutManager mLayoutManager;
     private  Context mContext;
+    private Location mSearchAddress;
 
 
     /*
@@ -44,14 +44,8 @@ public class ListFragment extends Fragment{
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Activity activity = getActivity();
         mContext = getContext();
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-
-        //open SharedPrefs & editor
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-        SharedPreferences.Editor editor = prefs.edit();
-        boolean addressChanged = prefs.getBoolean(getString(R.string.pref_address_changed_list), false);
 
 
         mRecyclerView = rootView.findViewById(R.id.kita_list);
@@ -68,21 +62,30 @@ public class ListFragment extends Fragment{
                 mLayoutManager.getOrientation());
         mRecyclerView.addItemDecoration(dividerItemDecoration);
 
-        Log.d(TAG, "addressChanged: " +addressChanged);
-
-        if (addressChanged) {
-            new GetDistanceTask(activity).execute();
-            Log.d(TAG, "GetDistanceTask.execute()");
-            editor.putBoolean(getString(R.string.pref_address_changed_list), false);
-            editor.apply();
-        } else setAdapter();
         return rootView;
     }
 
     @Override
     public void onStart() {
         Log.d(TAG, "onStart()");
-        setAdapter();
+
+        //open SharedPrefs & editor
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+        SharedPreferences.Editor editor = prefs.edit();
+        boolean addressChanged = prefs.getBoolean(getString(R.string.pref_address_changed_list), false);
+
+        mSearchAddress = getActivity().getIntent().getParcelableExtra("address");
+
+        if (addressChanged) {
+            new GetDistanceTask(getActivity(),
+                    getActivity().getSupportFragmentManager(),
+                    getActivity().getContentResolver(),
+                    mSearchAddress)
+                    .execute();
+            Log.d(TAG, "GetDistanceTask.execute()");
+            editor.putBoolean(getString(R.string.pref_address_changed_list), false);
+            editor.apply();
+        } else setAdapter();
         super.onStart();
         EventBus.getDefault().register(this);
     }
@@ -108,14 +111,6 @@ public class ListFragment extends Fragment{
             }
         });
         mRecyclerView.setAdapter(mAdapter);
-    }
-
-    // This method will be called when a RefreshTrigger event is posted
-    // this might happen in case filter settings are changed in the FilterFragment
-    @Subscribe
-    public void refreshListEntries(RefreshTrigger event) {
-        //re-setting the Adapter will result in the refresh of the Kita list
-        setAdapter();
     }
 
     @Subscribe

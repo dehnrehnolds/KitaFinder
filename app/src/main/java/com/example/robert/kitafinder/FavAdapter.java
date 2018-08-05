@@ -56,6 +56,9 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
     private final ClickListener mListener;
     private final float mSearchRadius;
     private int viewNr;
+    static int mActivePaddingInPx;
+    static int mInactivePaddingInPx;
+    static OverviewViewHolder mHolder;
 
     // Specify the columns we need.
 
@@ -65,6 +68,13 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
         viewNr = 0;
         mContext = context;
         mListener = listener;
+
+        // Calculation of pxs from dp
+        // Get the screen's density scale
+        final float scale = context.getResources().getDisplayMetrics().density;
+        // Convert the dps to pixels, based on density scale
+        mActivePaddingInPx = (int) (8 * scale + 0.5f);
+        mInactivePaddingInPx = (int) (4 * scale + 0.5f);
 
         //open filter preferences
         SharedPreferences sharedPref = mContext.getSharedPreferences("filter", context.MODE_PRIVATE);
@@ -108,15 +118,14 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
     }
 
     @Override
-    protected void onBindViewHolder(OverviewViewHolder holder, Cursor cursor)
-    {
+    protected void onBindViewHolder(OverviewViewHolder holder, Cursor cursor) {
 
         viewNr++;
         //Bind Name
         String kitaName = cursor.getString(IJ_COL_NAME);
         //Kita names ar far toooo loooong
-        if (kitaName.length()<24 && kitaName.length()>0) holder.name.setText(kitaName);
-        else if (kitaName.length()>=24) holder.name.setText(kitaName.substring(0,21)+"...");
+        if (kitaName.length() < 24 && kitaName.length() > 0) holder.name.setText(kitaName);
+        else if (kitaName.length() >= 24) holder.name.setText(kitaName.substring(0, 21) + "...");
         else holder.name.setText("kein Kitaname gefunden...");
 
         //Bind Distanz
@@ -124,9 +133,9 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
         if (kitaDistanz >= 0.0) holder.distanz.setText(String.format(
                 Locale.GERMAN,
                 "%2.1f km",
-                kitaDistanz/1000
+                kitaDistanz / 1000
         ));
-        else Log.e(TAG,"ERROR Distance= " + kitaDistanz);
+        else Log.e(TAG, "ERROR Distance= " + kitaDistanz);
 
         // Bind Fav-Logo (muss die Datenbank fresch callen, weil der cursor bei hin-und her scrollen
         // eventuell noch ncihts davon weiß)
@@ -137,27 +146,41 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
         Cursor freshCursor = holder.favorit.getContext().getContentResolver().query(
                 kitaUri,
                 new String[]{KitaContract.KitaEntry.COLUMN_FAV},
-                KitaContract.KitaEntry._ID+ " = ?",
-                new String[] {String.valueOf(kitaId)},
+                KitaContract.KitaEntry._ID + " = ?",
+                new String[]{String.valueOf(kitaId)},
                 null
         );
         String isFavString = "";
         //Get string from freschly queried cursor
         if (freshCursor.moveToFirst()) isFavString = (freshCursor.getString(0));
         //make Boolean from String
-        boolean isFav = false;
-        if (isFavString != mContext.getString(R.string.status_not_fav))
-            isFav = true;
-        else isFav = false;
 
-        //Bind logo to ImageButton-View depending on the value of freshly queried "isFav"
-        // for given Item (KitaEntry._ID+ " = ?", favId)
         holder.favorit.setTag(kitaId);
         holder.item.setTag(kitaId);
-        if (isFav){
-            holder.favorit.setImageResource(R.drawable.ic_favorite_black_24dp);
-        } else holder.favorit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
 
+        switch (isFavString) {
+            case "notFav":
+                setNotFavProperties(holder);
+                break;
+            case "fav":
+                setFavProperties(holder);
+                break;
+            case "sent":
+                setMailProperties(holder);
+                break;
+            case "waitingList":
+                setWaitingProperties(holder);
+                break;
+            case "declined":
+                setDeclinedProperties(holder);
+                break;
+            case "approved":
+                setApprovedProperties(holder);
+                break;
+            default:
+                Log.e(TAG, "no SWITCH statement met!");
+
+        }
     }
 
 
@@ -187,7 +210,7 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
             sprache = (TextView) itemView.findViewById(R.id.kita_sprache);
             distanz = (TextView) itemView.findViewById(R.id.kita_distanz);
 
-            favorit = (ImageButton) itemView.findViewById(R.id.kita_fav);
+            favorit = itemView.findViewById(R.id.kita_fav);
             mail = itemView.findViewById(R.id.kita_mail);
             waiting = itemView.findViewById(R.id.kita_wait);
             declined = itemView.findViewById(R.id.kita_declined);
@@ -197,6 +220,10 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
 
             item.setOnClickListener(this);
             favorit.setOnClickListener(this);
+            mail.setOnClickListener(this);
+            waiting.setOnClickListener(this);
+            declined.setOnClickListener(this);
+            approved.setOnClickListener(this);
         }
 
         @Override
@@ -245,7 +272,8 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
                     //if the Kita was favorite before clicking, unfav it...
                     if (isFav) {
                         ContentValues contentValuesUnFav = new ContentValues();
-                        contentValuesUnFav.put(KitaContract.KitaEntry.COLUMN_FAV, "notFav");
+                        contentValuesUnFav.put(KitaContract.KitaEntry.COLUMN_FAV,
+                                view.getContext().getString(R.string.status_not_fav));
                         int updatedRows = view.getContext().getContentResolver().update(
                                 kitaUri,
                                 contentValuesUnFav,
@@ -253,106 +281,101 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
                                 kitaIdArgs
                         );
                         Log.d(TAG,"Unfaved Kita-Id "+kitaId+ "and updated "+updatedRows+" rows");
-                        favorit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
 
-                        favorit.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-                        mail.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-                        waiting.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-                        declined.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-                        approved.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-
-                        favorit.setPadding(4,4,4,4);
-                        mail.setPadding(4,4,4,4);
-                        waiting.setPadding(4,4,4,4);
-                        declined.setPadding(4,4,4,4);
-                        approved.setPadding(4,4,4,4);
+                        setNotFavProperties(this);
 
                         isFav = false;
 
                     //...otherwise make it favorite
                     } else {
                         ContentValues contentValuesFav = new ContentValues();
-                        contentValuesFav.put(KitaContract.KitaEntry.COLUMN_FAV, "fav");
+                        contentValuesFav.put(KitaContract.KitaEntry.COLUMN_FAV,
+                                view.getContext().getString(R.string.status_fav));
                         int updatedRows = view.getContext().getContentResolver().update(
                                 kitaUri,
                                 contentValuesFav,
                                 selection,
                                 kitaIdArgs
                         );
-                        favorit.setImageResource(R.drawable.ic_favorite_black_24dp);
-                        favorit.setBackgroundResource(R.drawable.rounded_corner_fav_active);
-                        favorit.setPadding(8,8,8,8);
+
+                       setFavProperties(this);
                     }
-                    listenerRef.get().onPositionClicked(getAdapterPosition(), kitaId);
 
                 //if the clicked-on view == Mail Sent Status
                 } else if (view.getId() == mail.getId()) {
                     Log.d(TAG, "MailButton clicked.");
-                    favorit.setBackgroundResource(R.drawable.rounded_corner_fav_active);
-                    mail.setBackgroundResource(R.drawable.rounded_corner_fav_active);
-                    waiting.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-                    declined.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-                    approved.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
 
-                    favorit.setPadding(4, 4, 4, 4);
-                    mail.setPadding(8, 8, 8, 8);
-                    waiting.setPadding(4, 4, 4, 4);
-                    declined.setPadding(4, 4, 4, 4);
-                    approved.setPadding(4, 4, 4, 4);
+                    setMailProperties(this);
 
+                    // set Kita-status to mail-sent
+                    ContentValues contentValuesFav = new ContentValues();
+                    contentValuesFav.put(KitaContract.KitaEntry.COLUMN_FAV, 
+                            view.getContext().getString(R.string.status_mail_sent));
+                    int updatedRows = view.getContext().getContentResolver().update(
+                            kitaUri,
+                            contentValuesFav,
+                            selection,
+                            kitaIdArgs
+                    );
                     makeToast(view.getContext(), "Mail an Kita gesendet, warten auf Antwort.");
 
                 //if the clicked-on view == Waiting List Status
                 } else if (view.getId() == waiting.getId()){
-                    Log.d(TAG, "MailButton clicked.");
-                    favorit.setBackgroundResource(R.drawable.rounded_corner_fav_active);
-                    mail.setBackgroundResource(R.drawable.rounded_corner_fav_active);
-                    waiting.setBackgroundResource(R.drawable.rounded_corner_fav_active);
-                    declined.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-                    approved.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+                    Log.d(TAG, "WitingListButton clicked.");
 
-                    favorit.setPadding(4,4,4,4);
-                    mail.setPadding(4,4,4,4);
-                    waiting.setPadding(8,8,8,8);
-                    declined.setPadding(4,4,4,4);
-                    approved.setPadding(4,4,4,4);
+                    setWaitingProperties(this);
+
+                    // set Kita-status to waiting list
+                    ContentValues contentValuesFav = new ContentValues();
+                    contentValuesFav.put(KitaContract.KitaEntry.COLUMN_FAV,
+                            view.getContext().getString(R.string.status_waiting_list));
+                    int updatedRows = view.getContext().getContentResolver().update(
+                            kitaUri,
+                            contentValuesFav,
+                            selection,
+                            kitaIdArgs
+                    );
 
                     makeToast(view.getContext(), "Auf der Warteliste. " +
                             "Reminder alle 3 Monate senden!");
 
                 //if the clicked-on view == Declined Status
                 } else if (view.getId() == declined.getId()){
-                    Log.d(TAG, "MailButton clicked.");
-                    favorit.setBackgroundResource(R.drawable.rounded_corner_fav_declined);
-                    mail.setBackgroundResource(R.drawable.rounded_corner_fav_declined);
-                    waiting.setBackgroundResource(R.drawable.rounded_corner_fav_declined);
-                    declined.setBackgroundResource(R.drawable.rounded_corner_fav_declined);
-                    approved.setBackgroundResource(R.drawable.rounded_corner_fav_declined);
+                    Log.d(TAG, "DeclinedButton clicked.");
 
-                    favorit.setPadding(4,4,4,4);
-                    mail.setPadding(4,4,4,4);
-                    waiting.setPadding(4,4,4,4);
-                    declined.setPadding(8,8,8,8);
-                    approved.setPadding(4,4,4,4);
+                    setDeclinedProperties(this);
+
+                    // set Kita-status to declined
+                    ContentValues contentValuesFav = new ContentValues();
+                    contentValuesFav.put(KitaContract.KitaEntry.COLUMN_FAV,
+                            view.getContext().getString(R.string.status_declined));
+                    int updatedRows = view.getContext().getContentResolver().update(
+                            kitaUri,
+                            contentValuesFav,
+                            selection,
+                            kitaIdArgs
+                    );
 
                     makeToast(view.getContext(), "Die Kita hat abgesagt. " +
                             "Lassen Sie sich für das folgende Jahr auf die Warteliste setzen!");
 
                 //if the clicked-on view == APPROVED STATUS
                 } else if (view.getId() == approved.getId()){
-                    Log.d(TAG, "MailButton clicked.");
-                    favorit.setBackgroundResource(R.drawable.rounded_corner_fav_active);
-                    mail.setBackgroundResource(R.drawable.rounded_corner_fav_active);
-                    waiting.setBackgroundResource(R.drawable.rounded_corner_fav_active);
-                    declined.setBackgroundResource(R.drawable.rounded_corner_fav_active);
-                    approved.setBackgroundResource(R.drawable.rounded_corner_fav_active);
+                    Log.d(TAG, "ApprovedButton clicked.");
 
-                    favorit.setPadding(4,4,4,4);
-                    mail.setPadding(4,4,4,4);
-                    waiting.setPadding(4,4,4,4);
-                    declined.setPadding(8,8,8,8);
-                    approved.setPadding(4,4,4,4);
+                    setApprovedProperties(this);
 
+                    // set Kita-status to approved
+                    ContentValues contentValuesFav = new ContentValues();
+                    contentValuesFav.put(KitaContract.KitaEntry.COLUMN_FAV,
+                            view.getContext().getString(R.string.status_approved));
+                    int updatedRows = view.getContext().getContentResolver().update(
+                            kitaUri,
+                            contentValuesFav,
+                            selection,
+                            kitaIdArgs
+                    );
+                    
                     makeToast(view.getContext(), "Die Kita hat zugesagt, Glückwunsch!" +
                             " Denken Sie an den Kita-Gutschein!");
 
@@ -375,6 +398,130 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
             builder.create().show();
             return true;
         }
+
+    }
+
+    private static void setNotFavProperties(OverviewViewHolder holder){
+        holder.favorit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
+
+        holder.favorit.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+        holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+        holder.waiting.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+        holder.declined.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+        holder.approved.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+
+        holder.favorit.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.mail.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.waiting.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.declined.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.approved.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+    }
+
+    private static void setFavProperties(OverviewViewHolder holder){
+
+        holder.favorit.setImageResource(R.drawable.ic_favorite_black_24dp);
+
+        holder.favorit.setBackgroundResource(R.drawable.rounded_corner_fav_active);
+        holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+        holder.waiting.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+        holder.declined.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+        holder.approved.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+
+        holder.favorit.setPadding(mActivePaddingInPx,mActivePaddingInPx,
+                mActivePaddingInPx,mActivePaddingInPx);
+        holder.mail.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.waiting.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.declined.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.approved.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+    }
+
+    private static void setMailProperties(OverviewViewHolder holder){
+
+        holder.favorit.setBackgroundResource(R.drawable.rounded_corner_fav_active);
+        holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_active);
+        holder.waiting.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+        holder.declined.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+        holder.approved.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+
+        holder.favorit.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.mail.setPadding(mActivePaddingInPx,mActivePaddingInPx,
+                mActivePaddingInPx,mActivePaddingInPx);
+        holder.waiting.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.declined.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.approved.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+    }
+
+    private static void setWaitingProperties(OverviewViewHolder holder){
+
+        holder.favorit.setBackgroundResource(R.drawable.rounded_corner_fav_active);
+        holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_active);
+        holder.waiting.setBackgroundResource(R.drawable.rounded_corner_fav_active);
+        holder.declined.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+        holder.approved.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+
+        holder.favorit.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.mail.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.waiting.setPadding(mActivePaddingInPx,mActivePaddingInPx,
+                mActivePaddingInPx,mActivePaddingInPx);
+        holder.declined.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.approved.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+    }
+
+    private static void setDeclinedProperties(OverviewViewHolder holder){
+
+        holder.favorit.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
+        holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
+        holder.waiting.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
+        holder.declined.setBackgroundResource(R.drawable.rounded_corner_fav_declined);
+        holder.approved.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
+
+        holder.favorit.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.mail.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.waiting.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.declined.setPadding(mActivePaddingInPx,mActivePaddingInPx,
+                mActivePaddingInPx,mActivePaddingInPx);
+        holder.approved.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+    }
+
+    private static void setApprovedProperties(OverviewViewHolder holder){
+
+        holder.favorit.setBackgroundResource(R.drawable.rounded_corner_fav_active);
+        holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_active);
+        holder.waiting.setBackgroundResource(R.drawable.rounded_corner_fav_active);
+        holder.declined.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
+        holder.approved.setBackgroundResource(R.drawable.rounded_corner_fav_approved);
+
+        holder.favorit.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.mail.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.waiting.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.declined.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
+                mInactivePaddingInPx,mInactivePaddingInPx);
+        holder.approved.setPadding(mActivePaddingInPx,mActivePaddingInPx,
+                mActivePaddingInPx,mActivePaddingInPx);
     }
 
     private static void makeToast(Context context, final String text) {

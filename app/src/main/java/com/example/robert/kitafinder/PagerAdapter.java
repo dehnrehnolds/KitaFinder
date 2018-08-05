@@ -27,11 +27,11 @@ public class PagerAdapter extends FragmentStatePagerAdapter{
     public Fragment getItem(int position) {
 
         switch (position) {
-            case 0:
+            case 1:
                 Log.d(TAG, "new ListFragment()");
                 ListFragment tab1 = new ListFragment();
                 return tab1;
-            case 1:
+            case 0:
                 Log.d(TAG, "new MapFragment()");
                 SupportMapFragment tab2 = new MapFragment();
                 return tab2;

@@ -61,4 +61,13 @@ public class FavouriteFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
     }
+
+    public void onResume(){
+        super.onResume();
+        Log.d(TAG, "onResume()");
+        if (mRecyclerView != null && mAdapter != null){
+            mRecyclerView.setAdapter(mAdapter);
+            Log.d(TAG, "FavAdapter newly set");
+        } else Log.d(TAG, "either mRecycleView or mAdapter or both are null");
+    }
 }

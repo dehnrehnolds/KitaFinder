@@ -88,7 +88,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
 
     // should the database be upddated?? (must be set false after first start automatically.
     // maybe re-activation through settings menue)
-    protected static boolean updateDB = false;
+    protected static boolean updateDB;
     public static int mInserted = 0;
 
     class AddressResultReceiver extends ResultReceiver {
@@ -128,9 +128,32 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
         TO BE RE-DESIGNED
          */
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-//        SharedPreferences.Editor editor = prefs.edit();
         boolean previouslyStarted = prefs.getBoolean(getString(R.string.pref_previously_started_key), false);
-        //if it has not been started, start the search activity
+        //if it has not been started yet, initialise db and searchRadius
+        if (!previouslyStarted) {
+            Log.d(TAG, "startet for the first time");
+
+            // set previously started to "true"
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putBoolean(getString(R.string.pref_previously_started_key), true);
+
+            // set default searchRadius to "2 km"
+            SharedPreferences filterPref = getSharedPreferences("filter", Context.MODE_PRIVATE);
+            final SharedPreferences.Editor filterEditor = filterPref.edit();
+            filterEditor.putInt(getString(R.string.search_radius), 2);
+            filterEditor.apply();
+
+            // set address changed to "true"
+            editor.putBoolean(getString(R.string.pref_address_changed_list), true);
+            editor.putBoolean(getString(R.string.pref_address_changed_map), true);
+            editor.apply();
+
+            // Fetch data base from shipped csv file
+            new FetchDbFromCsv(this).execute();
+            Log.d(TAG, "FetchDbFromCsv.execute()");
+
+
+        }
 
         if (previouslyStarted) {
             Intent intent = new Intent(this, ResultActivity.class);
@@ -147,12 +170,6 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                     .build();
 
         }
-
-        if (updateDB) {
-            new FetchDbFromCsv(this).execute();
-            Log.d(TAG, "FetchDbFromCsv.execute()");
-        }
-
 
         final Button refreshAdd = findViewById(R.id.refresh_add_button);
         refreshAdd.setOnClickListener(new View.OnClickListener() {

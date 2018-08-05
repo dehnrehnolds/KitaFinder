@@ -1,18 +1,17 @@
 package com.example.robert.kitafinder;
 
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.robert.kitafinder.data.KitaContract;
 import com.opencsv.CSVReader;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.ArrayList;
 
 /**
@@ -24,9 +23,11 @@ public class FetchDbFromCsv  extends AsyncTask<Void, Integer, Integer> {
     private static final String TAG = FetchDbFromCsv.class.getSimpleName();
 
     private Context mContext;
+    private ProgressDialog mProgressDialog;
 
     public FetchDbFromCsv(Context context){
         mContext = context;
+        mProgressDialog = new ProgressDialog(context);
     }
 
     protected Integer doInBackground(Void...voids) {
@@ -88,6 +89,8 @@ public class FetchDbFromCsv  extends AsyncTask<Void, Integer, Integer> {
                 contentVLoc.put(KitaContract.LocationEntry.COLUMN_FK_KITA_ID, lineNr);
                 cvVectorKita.add(contentVKita);
                 cvVectorLoc.add(contentVLoc);
+
+                publishProgress(lineNr, reader.getMultilineLimit());
             }
 
             if (cvVectorKita.isEmpty()) {
@@ -98,7 +101,6 @@ public class FetchDbFromCsv  extends AsyncTask<Void, Integer, Integer> {
                 ContentValues[] cvArrayKita = new ContentValues[cvVectorKita.size()];
                 Log.d(TAG,"cvVectorKita.size(): "+cvVectorKita.size());
                 cvVectorKita.toArray(cvArrayKita);
-                Log.d(TAG,"cvArray.length: " +cvArrayKita.length);
                 kitaRows = mContext.getContentResolver().bulkInsert(KitaContract.KitaEntry.CONTENT_URI,
                         cvArrayKita);
             }
@@ -111,7 +113,6 @@ public class FetchDbFromCsv  extends AsyncTask<Void, Integer, Integer> {
                 ContentValues[] cvArrayLoc = new ContentValues[cvVectorLoc.size()];
                 Log.d(TAG,"cvVectorLoc.size(): "+cvVectorLoc.size());
                 cvVectorLoc.toArray(cvArrayLoc);
-                Log.d(TAG,"cvArray.length: " +cvArrayLoc.length);
                 return mContext.getContentResolver().bulkInsert(KitaContract.LocationEntry.CONTENT_URI,
                         cvArrayLoc) + kitaRows ;
             }
@@ -133,11 +134,35 @@ public class FetchDbFromCsv  extends AsyncTask<Void, Integer, Integer> {
         return 0;
     }
 
-    protected void onProgressUpdate(Integer... progress) {
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
+        mProgressDialog.setMessage("Aktualisiere Kita-Datenbank...");
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.show();
+    }
 
+    protected void onProgressUpdate(Integer... progress) {
+        mProgressDialog.setIndeterminate(false);
+        mProgressDialog.setMax(progress[1]);
+        mProgressDialog.setProgress(progress[0]);
+        super.onProgressUpdate(progress);
 }
 
     protected void onPostExecute(Integer result) {
+        if (mProgressDialog.isShowing()) {
+            mProgressDialog.dismiss();
+        }
+
+        if (result > 0) {
+            Toast.makeText(mContext, result + " Datenbankeinträge aktualisiert", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(mContext, "Datenbank nicht gefunden", Toast.LENGTH_LONG).show();
+        }
+
+        super.onPostExecute(result);
         SearchActivity.mInserted = result;
     }
 }

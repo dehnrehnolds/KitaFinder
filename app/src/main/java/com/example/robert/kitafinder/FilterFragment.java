@@ -4,35 +4,24 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.provider.MediaStore;
-import android.support.annotation.InterpolatorRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.BottomSheetDialogFragment;
-import android.support.design.widget.CoordinatorLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.example.robert.kitafinder.data.RefreshTrigger;
-import com.google.android.gms.wearable.MessageEvent;
+import com.example.robert.kitafinder.data.MapRefreshTrigger;
 
 import org.greenrobot.eventbus.EventBus;
-import org.w3c.dom.Text;
-
-import static android.icu.lang.UCharacter.GraphemeClusterBreak.V;
-import static java.lang.reflect.Array.getInt;
 
 /**
  * Created by Robert on 28.10.2017.
@@ -437,8 +426,8 @@ public class FilterFragment extends BottomSheetDialogFragment implements Adapter
         Log.d(TAG,"    eveningTime: " + eveningTime);
         Log.d(TAG,"    openingHours: " + openingHours);
         Log.d(TAG,"    language: " + language);
-        Log.d(TAG, "Send RefreshTrigger event _ ___ _ ___ _ ___ _ ___ _ ___ _ ");
-        EventBus.getDefault().post(new RefreshTrigger());
+        Log.d(TAG, "Send MapRefreshTrigger event _ ___ _ ___ _ ___ _ ___ _ ___ _ ");
+        EventBus.getDefault().post(new MapRefreshTrigger());
     }
 }
 

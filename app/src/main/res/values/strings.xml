@@ -15,9 +15,10 @@
     <string name="no_location_detected">
             No location detected. Make sure location is enabled on the device.</string>
 
-    <string name="permission_rationale">Location permission is needed for core functionality</string>
-    <string name="permission_denied_explanation">Permission was denied, but is needed for core
-            functionality.</string>
+    <string name="permission_rationale">Standortzugriff wird für die Suche im Umkreis des aktuellen
+        Standortes benötigt.</string>
+    <string name="permission_denied_explanation">Um den Standort als Suchadress verwenden zu können,
+        muss der Standortzugriff zunächst erlaubt werden.</string>
     <string name="settings">Settings</string>
     <string name="latitude_label">Latitude</string>
     <string name="longitude_label">Longitude</string>
@@ -38,6 +39,9 @@
     <string name="search_button_text">Kita finden</string>
 
     <!-- ****** Result Activity ****** -->
+
+    <!-- DistanceProgressDialogFragment -->
+    <string name="dpdf_tag">DistanceProgressDialogFragment</string>
 
     <!-- Mail Intent -->
     <string name="no_mail_toast">"Die E-Mail Adresse der Kita ist uns nicht bekannt."</string>

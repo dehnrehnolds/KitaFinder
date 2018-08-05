@@ -12,23 +12,19 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.text.SpannableString;
-import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
+import com.example.robert.kitafinder.data.Constants;
 import com.example.robert.kitafinder.data.DetailTrigger;
-import com.example.robert.kitafinder.data.DistancesCalculatedTrigger;
 import com.example.robert.kitafinder.data.KitaContract;
 import com.example.robert.kitafinder.data.KitaItem;
 import com.example.robert.kitafinder.data.KitaProvider;
-import com.example.robert.kitafinder.data.RefreshTrigger;
-import com.google.android.gms.maps.CameraUpdate;
+import com.example.robert.kitafinder.data.MapRefreshTrigger;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -37,7 +33,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.Dash;
-import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -48,21 +43,13 @@ import com.google.maps.android.clustering.ClusterManager;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-
-import de.hdodenhof.circleimageview.CircleImageView;
 
 import static com.example.robert.kitafinder.data.Constants.COL_AUFNAHMEA;
 import static com.example.robert.kitafinder.data.Constants.COL_FK_KITA_ID;
 import static com.example.robert.kitafinder.data.Constants.COL_FREMDSP;
-import static com.example.robert.kitafinder.data.Constants.COL_KITAID;
-import static com.example.robert.kitafinder.data.Constants.COL_LAT;
-import static com.example.robert.kitafinder.data.Constants.COL_LONG;
-import static com.example.robert.kitafinder.data.Constants.COL_NAME;
 import static com.example.robert.kitafinder.data.Constants.COL_ÖFFNUNGSZ;
 import static com.example.robert.kitafinder.data.Constants.IJ_COL_LAT;
 import static com.example.robert.kitafinder.data.Constants.IJ_COL_LONG;
@@ -161,7 +148,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
             // get and bind Sprachen
             String fremdSprache = kitaCursor.getString(COL_FREMDSP);
             Log.d(TAG, "Fremdsprache: " + fremdSprache);
-            if (sprache.equals("deutsch")) {
+            if (sprache.getText().equals("deutsch")) {
                 sprache.setText("DE");
                 sprache.setVisibility(View.GONE);
             } else if (sprache.length() > 0) {
@@ -176,8 +163,13 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
 
     @Override
     public void onInfoWindowClick(Marker marker) {
-        Log.d(TAG, "DetailTrigger posted with: " + marker.getSnippet());
-        EventBus.getDefault().post(new DetailTrigger(Integer.parseInt(marker.getSnippet())));
+        int kitaID = Integer.parseInt(marker.getSnippet());
+        Log.d(TAG, "DetailTrigger posted with: " + kitaID);
+        if (kitaID >= 0) EventBus.getDefault().post(new DetailTrigger(Integer.parseInt(marker.getSnippet())));
+        else {
+            Log.e(TAG, "kein DetailIntent für ZuHause");
+            showAddressToast();
+        }
     }
 
     private final String TAG = MapFragment.class.getSimpleName();
@@ -185,6 +177,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
 
     private static final String ARG_SECTION_NUMBER = "section_number";
     private GoogleMap mMap;
+    public Location mLastSearchAddress;
     Location mSearchAddress;
     LatLng mSearchAddressLL;
     Marker mHomeMarker;
@@ -202,15 +195,54 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
     public void onCreate(Bundle onSavedInstanceState) {
         super.onCreate(onSavedInstanceState);
         mSearchAddress = getActivity().getIntent().getParcelableExtra("address");
+        if (mSearchAddress != null)
         mSearchAddressLL = new LatLng(mSearchAddress.getLatitude(), mSearchAddress.getLongitude());
 //        setUpMapIfNeeded();
+        else {
+            Log.d(TAG, "mLastSearchAddress == null and replace by DB entry 'Zu Hause'");
+            mLastSearchAddress = new Location("Zu Hause");
+            String selection = KitaContract.LocationEntry.COLUMN_MAPST + " = ?";
+            String[] args = new String[]{"3"};
+
+            Cursor addressCursor = getActivity().getContentResolver().query(
+                    KitaContract.LocationEntry.CONTENT_URI,
+                    null,
+                    selection,
+                    args,
+                    null);
+
+            if (addressCursor != null && addressCursor.moveToFirst()) {
+                double addressLat = addressCursor.getDouble(Constants.COL_LAT);
+                double addressLong = addressCursor.getDouble(Constants.COL_LONG);
+                mLastSearchAddress.setLatitude(addressLat);
+                mLastSearchAddress.setLongitude(addressLong);
+                addressCursor.close();
+            } else {
+                Log.e(TAG, "No Last searchAddress found");
+                // set dummie address in case of first launch
+                mLastSearchAddress.setLatitude(33);
+                mLastSearchAddress.setLongitude(45);
+                ContentValues contentV = new ContentValues();
+                contentV.put(KitaContract.LocationEntry.COLUMN_LAT, 33.0);
+                contentV.put(KitaContract.LocationEntry.COLUMN_LONG, 45.0);
+                contentV.put(KitaContract.LocationEntry.COLUMN_DIST, -1.0);
+                contentV.put(KitaContract.LocationEntry.COLUMN_MAPST, 3);
+                contentV.put(KitaContract.LocationEntry.COLUMN_TYPE, 3);
+                contentV.put(KitaContract.LocationEntry.COLUMN_FK_KITA_ID, -3);
+                getActivity().getContentResolver().insert(KitaContract.LocationEntry.CONTENT_URI,
+                        contentV);
+            }
+
+            mSearchAddressLL = new LatLng(mLastSearchAddress.getLatitude(),
+                    mLastSearchAddress.getLongitude());
+        }
     }
 
     @Override
     public void onStart() {
-        super.onStart();
-        Log.d(TAG, "onStart()");
         EventBus.getDefault().register(this);
+        Log.d(TAG, "onStart()");
+        super.onStart();
     }
 
     @Override
@@ -225,7 +257,6 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
     public void onPause() {
         Log.d(TAG, "onPause()");
         super.onPause();
-
     }
 
     public void onResume() {
@@ -252,16 +283,13 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         mMap.setOnInfoWindowClickListener(this);
     }
 
-    // This method will be called when a RefreshTrigger event is posted
+    // This method will be called when a MapRefreshTrigger event is posted
     // this might happen in case filter settings are changed in the FilterFragment or
     // after finishing getDistanceTask after changing the address
-    @Subscribe
-    public void refreshMap(RefreshTrigger event) {
-        Log.d(TAG, "refreshMarkers() called");
 
-        // load prefs to find out if address has been changed
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        boolean addressChanged = prefs.getBoolean(getString(R.string.pref_address_changed_map), false);
+    @Subscribe
+    public void refreshMap(MapRefreshTrigger event) {
+        Log.d(TAG, "refreshMarkers() called");
 
         // Kita markers have to be always created, when the filter changed
         createKitaMarker();
@@ -315,6 +343,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
         return mMap.addMarker(new MarkerOptions().
                 position(mSearchAddressLL)
                 .title("Zu Hause")
+                .snippet("-3")
                 .draggable(true)
                 .icon(BitmapDescriptorFactory.defaultMarker(15))
         );
@@ -362,7 +391,7 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
                 double kitaLat = activeCursor.getDouble(IJ_COL_LAT);
                 double kitaLong = activeCursor.getDouble(IJ_COL_LONG);
                 String kitaName = activeCursor.getString(IJ_COL_NAME);
-                Log.d(TAG, kitaName);
+//                Log.d(TAG, kitaName);
                 int kitaID = activeCursor.getInt(COL_FK_KITA_ID);
                 LatLng kitaPosition = new LatLng(kitaLat, kitaLong);
 
@@ -588,8 +617,16 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
 
     }
 
-
-
+    private void showAddressToast() {
+        String address;
+        if (mSearchAddress != null) address  = mSearchAddress.getProvider();
+        else address = "Adresse nicht gefunden!";
+        Toast sAddToast = Toast.makeText(getContext(),
+                address,
+                Toast.LENGTH_LONG
+        );
+        sAddToast.show();
+    }
 
 
 }

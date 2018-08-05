@@ -1,57 +1,34 @@
 package com.example.robert.kitafinder;
 
-import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.location.Location;
-import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.BottomSheetBehavior;
-import android.support.design.widget.BottomSheetDialog;
-import android.support.design.widget.BottomSheetDialogFragment;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 
 import com.example.robert.kitafinder.data.DetailTrigger;
-import com.example.robert.kitafinder.data.KitaContract;
-import com.example.robert.kitafinder.data.KitaProvider;
-import com.example.robert.kitafinder.data.RefreshTrigger;
+import com.example.robert.kitafinder.data.MapRefreshTrigger;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
-
-import java.util.Map;
-import java.util.Set;
-
-import static android.R.attr.filter;
-import static android.R.attr.id;
-import static com.example.robert.kitafinder.R.string.settings;
 
 
 public class ResultActivity extends AppCompatActivity {
 
     Intent detailIntent;
+    SharedPreferences mPrefs;
+    SharedPreferences.Editor mEditor;
     private static final String TAG = ResultActivity.class.getSimpleName();
     private boolean mTwoPane;
 
@@ -59,6 +36,19 @@ public class ResultActivity extends AppCompatActivity {
     public void onStart() {
         Log.d(TAG, "onStart()");
         super.onStart();
+
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        mEditor = mPrefs.edit();
+
+        boolean addressChanged = mPrefs.getBoolean(getString(R.string.pref_address_changed_map),
+                false);
+        if (addressChanged) {
+            Log.d(TAG, "addressChanged, MapRefreshTrigger posted");
+            EventBus.getDefault().post(new MapRefreshTrigger());
+            mEditor.putBoolean(getString(R.string.pref_address_changed_map), false);
+            mEditor.apply();
+        }
+
         EventBus.getDefault().register(this);
     }
 
@@ -98,16 +88,16 @@ public class ResultActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         ActionBar ab = getSupportActionBar();
         // Enable the Up button
-        ab.setDisplayHomeAsUpEnabled(true);
+        if (ab != null) ab.setDisplayHomeAsUpEnabled(true);
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
-        tabLayout.addTab(tabLayout.newTab().setText("Liste"));
         tabLayout.addTab(tabLayout.newTab().setText("Karte"));
+        tabLayout.addTab(tabLayout.newTab().setText("Liste"));
         tabLayout.addTab(tabLayout.newTab().setText("Favouriten"));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
         final ViewPager mViewPager = (ViewPager) findViewById(R.id.pager);
-        mViewPager.setOffscreenPageLimit(1);
+        mViewPager.setOffscreenPageLimit(2);
         final PagerAdapter adapter = new PagerAdapter
                 (getSupportFragmentManager(), tabLayout.getTabCount(), this);
         mViewPager.setAdapter(adapter);
@@ -116,6 +106,19 @@ public class ResultActivity extends AppCompatActivity {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 mViewPager.setCurrentItem(tab.getPosition());
+                if (tab.getPosition() == 0){
+                    Log.d(TAG, "tab.getPosition == 0");
+                    boolean addressChanged = mPrefs.getBoolean(getString(R.string.pref_address_changed_map),
+                            false);
+                    if (addressChanged) {
+                        Log.d(TAG, "addressChanged, MapRefreshTrigger posted");
+                        EventBus.getDefault().post(new MapRefreshTrigger());
+                    } else Log.d(TAG, "!addressChaged");
+                } else if (tab.getPosition() == 1){
+                    Log.d(TAG, "tab.getPosition == 1");
+                } else if (tab.getPosition() == 2){
+                    Log.d(TAG, "tab.getPosition == 2");
+                }
             }
 
             @Override
