@@ -25,6 +25,7 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.text.InputType;
+import android.util.EventLog;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -37,6 +38,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.robert.kitafinder.data.DistancesCalculatedTrigger;
 import com.example.robert.kitafinder.data.KitaContract;
 import com.example.robert.kitafinder.data.Constants;
 import com.example.robert.kitafinder.data.KitaProvider;
@@ -47,6 +49,8 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.opencsv.CSVReader;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
@@ -80,6 +84,7 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
     public Location mEditTextAddress;
     private TextInputEditText mAddressInput;
     private TextInputLayout mAddressInputLayout;
+    private Intent mButtonIntent;
 
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
     private LocationRequest mLocationRequest = LocationRequest.create();
@@ -117,7 +122,11 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_search);
+
+        EventBus.getDefault().register(this);
+
 //        mAddressInputLayout.setHint("Adresse eingeben oder Standort verwenden...");
 
         /*
@@ -271,10 +280,11 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
         searchB.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // creating intent for launching ResultActivity
-                Intent ButtonIntent = new Intent(v.getContext(), ResultActivity.class);
+                mButtonIntent = new Intent(v.getContext(), ResultActivity.class);
                 // opening SharedPrefs & editor
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
                 SharedPreferences.Editor editor = prefs.edit();
+                boolean addressChanged;
 
 
 
@@ -298,13 +308,15 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                     if (mEditTextAddress.distanceTo(mLastSearchAddress) > 50) {
                         editor.putBoolean(getString(R.string.pref_address_changed_list), true);
                         editor.putBoolean(getString(R.string.pref_address_changed_map), true);
+                        addressChanged = true;
                         Log.d(TAG, "addressChanged changed to true");
                     } else {
                         editor.putBoolean(getString(R.string.pref_address_changed_list), false);
                         editor.putBoolean(getString(R.string.pref_address_changed_map), false);
+                        addressChanged = false;
                         Log.d(TAG, "    addressChanged changed to false");
                     }
-                    ButtonIntent.putExtra("address", mEditTextAddress);
+                    mButtonIntent.putExtra("address", mEditTextAddress);
                     Log.d(TAG, "editTextAddress used for ButtonIntent of ResultActivity");
                     mLastSearchAddress = mEditTextAddress;
                     editor.apply();
@@ -312,12 +324,26 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                     makeToast("Keine Adresse für die Suche angegeben");
                     return;
                 }
-                v.getContext().startActivity(ButtonIntent);
+                if (addressChanged) {
+                    new GetDistanceTask(getSupportFragmentManager(),
+                            getContentResolver(),
+                            mEditTextAddress)
+                            .execute();
+                    Log.d(TAG, "GetDistanceTask.execute()");
+                    editor.putBoolean(getString(R.string.pref_address_changed_list), false);
+                    editor.apply();
+                } else v.getContext().startActivity(mButtonIntent);
                 hideKeyboard(v);
 
             }
         });
 
+    }
+
+    @Subscribe
+    public void startResultActivity (DistancesCalculatedTrigger event){
+        Log.d(TAG, "startActivity(mButtonIntent) from DistancesCalculatedTrigger");
+        startActivity(mButtonIntent);
     }
 
     @Override
@@ -374,6 +400,12 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                 args
         );
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        EventBus.getDefault().unregister(this);
+        super.onDestroy();
     }
 
     @Override

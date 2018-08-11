@@ -76,16 +76,17 @@ public class ListFragment extends Fragment{
 
         mSearchAddress = getActivity().getIntent().getParcelableExtra("address");
 
-        if (addressChanged) {
-            new GetDistanceTask(getActivity(),
-                    getActivity().getSupportFragmentManager(),
-                    getActivity().getContentResolver(),
-                    mSearchAddress)
-                    .execute();
-            Log.d(TAG, "GetDistanceTask.execute()");
-            editor.putBoolean(getString(R.string.pref_address_changed_list), false);
-            editor.apply();
-        } else setAdapter();
+//        if (addressChanged) {
+//            new GetDistanceTask(getActivity(),
+//                    getActivity().getSupportFragmentManager(),
+//                    getActivity().getContentResolver(),
+//                    mSearchAddress)
+//                    .execute();
+//            Log.d(TAG, "GetDistanceTask.execute()");
+//            editor.putBoolean(getString(R.string.pref_address_changed_list), false);
+//            editor.apply();
+//        } else setAdapter();
+        setAdapter();
         super.onStart();
         EventBus.getDefault().register(this);
     }

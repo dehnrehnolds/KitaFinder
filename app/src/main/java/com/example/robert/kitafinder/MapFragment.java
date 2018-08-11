@@ -194,6 +194,8 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
     @Override
     public void onCreate(Bundle onSavedInstanceState) {
         super.onCreate(onSavedInstanceState);
+        EventBus.getDefault().register(this);
+
         mSearchAddress = getActivity().getIntent().getParcelableExtra("address");
         if (mSearchAddress != null)
         mSearchAddressLL = new LatLng(mSearchAddress.getLatitude(), mSearchAddress.getLongitude());
@@ -240,17 +242,22 @@ public class MapFragment extends SupportMapFragment implements OnMapReadyCallbac
 
     @Override
     public void onStart() {
-        EventBus.getDefault().register(this);
         Log.d(TAG, "onStart()");
         super.onStart();
     }
 
     @Override
     public void onStop() {
-        EventBus.getDefault().unregister(this);
         super.onStop();
         Log.d(TAG, "onStop()");
         getActivity().getIntent().putExtra("address", mSearchAddress);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+        Log.d(TAG, "onDestroy()");
     }
 
     @Override

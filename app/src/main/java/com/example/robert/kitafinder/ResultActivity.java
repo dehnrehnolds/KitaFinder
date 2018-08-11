@@ -36,19 +36,6 @@ public class ResultActivity extends AppCompatActivity {
     public void onStart() {
         Log.d(TAG, "onStart()");
         super.onStart();
-
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        mEditor = mPrefs.edit();
-
-        boolean addressChanged = mPrefs.getBoolean(getString(R.string.pref_address_changed_map),
-                false);
-        if (addressChanged) {
-            Log.d(TAG, "addressChanged, MapRefreshTrigger posted");
-            EventBus.getDefault().post(new MapRefreshTrigger());
-            mEditor.putBoolean(getString(R.string.pref_address_changed_map), false);
-            mEditor.apply();
-        }
-
         EventBus.getDefault().register(this);
     }
 
@@ -73,6 +60,18 @@ public class ResultActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_result);
         detailIntent = new Intent(this, DetailActivity.class);
+
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        mEditor = mPrefs.edit();
+
+        boolean addressChanged = mPrefs.getBoolean(getString(R.string.pref_address_changed_map),
+                false);
+        if (addressChanged) {
+            Log.d(TAG, "addressChanged, MapRefreshTrigger posted");
+            EventBus.getDefault().post(new MapRefreshTrigger());
+            mEditor.putBoolean(getString(R.string.pref_address_changed_map), false);
+            mEditor.apply();
+        } else Log.d(TAG, "!adressChanged (onCreate())");
 
 //        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 //        SharedPreferences.Editor editor = prefs.edit();
@@ -113,7 +112,7 @@ public class ResultActivity extends AppCompatActivity {
                     if (addressChanged) {
                         Log.d(TAG, "addressChanged, MapRefreshTrigger posted");
                         EventBus.getDefault().post(new MapRefreshTrigger());
-                    } else Log.d(TAG, "!addressChaged");
+                    } else Log.d(TAG, "!addressChaged (onTabSelected())");
                 } else if (tab.getPosition() == 1){
                     Log.d(TAG, "tab.getPosition == 1");
                 } else if (tab.getPosition() == 2){

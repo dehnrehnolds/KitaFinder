@@ -1,6 +1,7 @@
 package com.example.robert.kitafinder;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -29,18 +30,17 @@ import static com.example.robert.kitafinder.data.Constants.COL_LAT;
 
 public class GetDistanceTask extends AsyncTask<Void,Integer,Integer> {
 
-    private Activity mActivity;
+//    private Activity mActivity;
     private Location mSearchAddress;
     private FragmentManager mSfm;
     private ContentResolver mCr;
     private static final String TAG = GetDistanceTask.class.getSimpleName();
     private DialogFragment mDf;
 
-    public GetDistanceTask(Activity activity, FragmentManager sfm, ContentResolver cr, Location searchAddress){
-        mActivity = activity;
+    public GetDistanceTask(FragmentManager sfm, ContentResolver cr, Location searchAddress){
         mSfm = sfm;
         mCr = cr;
-        mSearchAddress = activity.getIntent().getParcelableExtra("address");
+        mSearchAddress = searchAddress;
     }
 
     @Override
@@ -92,47 +92,42 @@ public class GetDistanceTask extends AsyncTask<Void,Integer,Integer> {
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-//        // instantiate ProgressDialog
-//        mDf =
-//                (DistanceProgressDialogFragment) mSfm.findFragmentByTag("dpdf_tag");
-//        if (mDf == null){
-//            mDf = new DistanceProgressDialogFragment();
-//            mSfm.beginTransaction()
-//                    .add(mDf, "dpdf_tag")
-//                    .commitAllowingStateLoss();
-//        }
-//        else mDf.show(mSfm, "dpdf_tag");
-        Toast.makeText(mActivity, "Enfernungen werden aktualisiert...", Toast.LENGTH_LONG);
+        // instantiate ProgressDialog
+        mDf =
+                (DistanceProgressDialogFragment) mSfm.findFragmentByTag("dpdf_tag");
+        if (mDf == null){
+            mDf = new DistanceProgressDialogFragment();
+            mSfm.beginTransaction()
+                    .add(mDf, "dpdf_tag")
+                    .commitAllowingStateLoss();
+        }
+        else mDf.show(mSfm, "dpdf_tag");
+//        Toast.makeText(mActivity, "Enfernungen werden aktualisiert...", Toast.LENGTH_LONG);
     }
 
     @Override
     protected void onProgressUpdate(Integer... progress) {
-//        if (mDf != null){
-//            ProgressDialog pDialog = (ProgressDialog) mDf.getDialog();
-//            pDialog.setProgress(progress[0]);
-//        }
+        if (mDf != null){
+            ProgressDialog pDialog = (ProgressDialog) mDf.getDialog();
+            pDialog.setProgress(progress[0]);
+        }
         super.onProgressUpdate(progress);
     }
 
     @Override
     protected void onPostExecute(Integer rowsUpdated) {
-//        if ( mDf != null) {
-//            try {
-//                wait(1500);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//            Log.d(TAG, "dpdf.dismiss()");
-//            mDf.dismiss();
-//        }
-//
+        if ( mDf != null) {
+            Log.d(TAG, "dpdf.dismiss()");
+            mDf.dismiss();
+        }
+
 //        if (rowsUpdated > 0) {
 //            Toast.makeText(mActivity, rowsUpdated + " Kitas gefunden", Toast.LENGTH_LONG).show();
 //        } else {
 //            Toast.makeText(mActivity, "Keine Kitas gefunden", Toast.LENGTH_LONG).show();
 //        }
 
-        Toast.makeText(mActivity, "Enfernungen aktualisiert!", Toast.LENGTH_LONG);
+//        Toast.makeText(mActivity, "Enfernungen aktualisiert!", Toast.LENGTH_LONG);
         EventBus.getDefault().post(new DistancesCalculatedTrigger());
         super.onPostExecute(rowsUpdated);
     }
