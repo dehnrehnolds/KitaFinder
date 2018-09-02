@@ -404,11 +404,11 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
     private static void setNotFavProperties(OverviewViewHolder holder){
         holder.favorit.setImageResource(R.drawable.ic_favorite_border_black_24dp);
 
-        holder.favorit.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-        holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-        holder.waiting.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-        holder.declined.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-        holder.approved.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+        holder.favorit.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
+        holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
+        holder.waiting.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
+        holder.declined.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
+        holder.approved.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
 
         holder.favorit.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
                 mInactivePaddingInPx,mInactivePaddingInPx);
@@ -427,10 +427,10 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
         holder.favorit.setImageResource(R.drawable.ic_favorite_black_24dp);
 
         holder.favorit.setBackgroundResource(R.drawable.rounded_corner_fav_active);
-        holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-        holder.waiting.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-        holder.declined.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-        holder.approved.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+        holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
+        holder.waiting.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
+        holder.declined.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
+        holder.approved.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
 
         holder.favorit.setPadding(mActivePaddingInPx,mActivePaddingInPx,
                 mActivePaddingInPx,mActivePaddingInPx);
@@ -448,9 +448,9 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
 
         holder.favorit.setBackgroundResource(R.drawable.rounded_corner_fav_active);
         holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_active);
-        holder.waiting.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-        holder.declined.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-        holder.approved.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+        holder.waiting.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
+        holder.declined.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
+        holder.approved.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
 
         holder.favorit.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
                 mInactivePaddingInPx,mInactivePaddingInPx);
@@ -469,8 +469,8 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
         holder.favorit.setBackgroundResource(R.drawable.rounded_corner_fav_active);
         holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_active);
         holder.waiting.setBackgroundResource(R.drawable.rounded_corner_fav_active);
-        holder.declined.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
-        holder.approved.setBackgroundResource(R.drawable.rounded_corner_fav_inactive);
+        holder.declined.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
+        holder.approved.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
 
         holder.favorit.setPadding(mInactivePaddingInPx,mInactivePaddingInPx,
                 mInactivePaddingInPx,mInactivePaddingInPx);
