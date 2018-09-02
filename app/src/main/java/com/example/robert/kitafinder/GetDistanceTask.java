@@ -1,6 +1,7 @@
 package com.example.robert.kitafinder;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -18,6 +19,7 @@ import com.example.robert.kitafinder.data.KitaContract;
 import com.example.robert.kitafinder.data.KitaProvider;
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.util.ErrorDialogManager;
 
 import static com.example.robert.kitafinder.data.Constants.COL_LOCID;
 import static com.example.robert.kitafinder.data.Constants.COL_LONG;
@@ -35,7 +37,8 @@ public class GetDistanceTask extends AsyncTask<Void,Integer,Integer> {
     private FragmentManager mSfm;
     private ContentResolver mCr;
     private static final String TAG = GetDistanceTask.class.getSimpleName();
-    private DialogFragment mDf;
+    private DistanceProgressDialogFragment mDf;
+    private ProgressDialog mProgressDialog;
 
     public GetDistanceTask(FragmentManager sfm, ContentResolver cr, Location searchAddress){
         mSfm = sfm;
@@ -81,7 +84,7 @@ public class GetDistanceTask extends AsyncTask<Void,Integer,Integer> {
                         new String[] {String.valueOf(id)});
                 rowsUpdated += rowUpdated;
                 publishProgress(rowsUpdated, max);
-                Log.d(TAG, "Distance calculated: " + id);
+//                Log.d(TAG, "Distance calculated: " + id);
             }while (cursor.moveToNext());
         cursor.close();
 
@@ -92,25 +95,27 @@ public class GetDistanceTask extends AsyncTask<Void,Integer,Integer> {
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        // instantiate ProgressDialog
-        mDf =
-                (DistanceProgressDialogFragment) mSfm.findFragmentByTag("dpdf_tag");
-        if (mDf == null){
-            mDf = new DistanceProgressDialogFragment();
-            mSfm.beginTransaction()
-                    .add(mDf, "dpdf_tag")
-                    .commitAllowingStateLoss();
-        }
-        else mDf.show(mSfm, "dpdf_tag");
+        mDf = DistanceProgressDialogFragment.newInstance();
+        mDf.show(mSfm, "dpdf_tag");
+        mSfm.executePendingTransactions();
+
+        if (mDf != null) {
+//            Log.d(TAG, "progress[0]: " + progress[0]);
+            mProgressDialog = (ProgressDialog) mDf.getDialog();
+            Log.d(TAG, "mProgressDialog = ....");
+            if (mProgressDialog != null){
+                mProgressDialog.setProgressNumberFormat("%1d/%2d Kitas");
+            } else Log.d(TAG, "mProgressDialog is NULL");
+        } else Log.d(TAG, "Why would mDf still be NULL???");
+
+
 //        Toast.makeText(mActivity, "Enfernungen werden aktualisiert...", Toast.LENGTH_LONG);
     }
 
     @Override
     protected void onProgressUpdate(Integer... progress) {
-        if (mDf != null){
-            ProgressDialog pDialog = (ProgressDialog) mDf.getDialog();
-            pDialog.setProgress(progress[0]);
-        }
+        mProgressDialog.setMax(progress[1]);
+        mProgressDialog.setProgress(progress[0]);
         super.onProgressUpdate(progress);
     }
 

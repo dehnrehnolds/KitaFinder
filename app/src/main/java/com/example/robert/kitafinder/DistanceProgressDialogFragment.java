@@ -5,6 +5,7 @@ package com.example.robert.kitafinder;
  */
 
 import android.app.Dialog;
+
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -17,6 +18,10 @@ import android.view.ViewGroup;
 
 public class DistanceProgressDialogFragment extends DialogFragment
 {
+    static DistanceProgressDialogFragment newInstance() {
+        return new DistanceProgressDialogFragment();
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
@@ -31,9 +36,8 @@ public class DistanceProgressDialogFragment extends DialogFragment
     public ProgressDialog onCreateDialog(Bundle savedInstanceState)
     {
         ProgressDialog dialog = new ProgressDialog(getActivity(), getTheme());
-        dialog.setTitle("Kita Guide");
-        dialog.setMessage("Suche Kitas in der Nähe");
-        dialog.setIndeterminate(true);
+        dialog.setMessage("Suche Kitas in der Nähe....");
+        dialog.setIndeterminate(false);
         dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
         return dialog;
     }
