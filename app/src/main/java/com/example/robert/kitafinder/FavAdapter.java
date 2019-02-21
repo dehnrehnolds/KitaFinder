@@ -19,8 +19,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.robert.kitafinder.data.DetailTrigger;
+import com.example.robert.kitafinder.data.FavRefreshTrigger;
 import com.example.robert.kitafinder.data.KitaContract;
 import com.example.robert.kitafinder.data.KitaProvider;
+import com.example.robert.kitafinder.data.ListRefreshTrigger;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -259,15 +261,19 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
 
                 //get boolean isFav from cursor
                 if (isFavCursor.moveToFirst()) isFavString = (isFavCursor.getString(0));
+                //make Boolean from String
+                if (!isFavString.equals(view.getContext().getString(R.string.status_not_fav)))
+                    isFav = true;
+                isFavCursor.close();
 
                 // if clicked-on view == Fav-Button
                 if (view.getId() == favorit.getId()) {
 
-                    //make Boolean from String
-                    if (!isFavString.equals("notFav"))
-                        isFav = true;
-                    else isFav = false;
-                    isFavCursor.close();
+                    // In case anything happens on the FAV part, refresh the ListAdapter already,
+                    // so it will be updated when looking at the list again later
+                    EventBus.getDefault().post(new ListRefreshTrigger());
+                    Log.d(TAG, "LIST REFRESH TRIGGER sent");
+
 
                     //if the Kita was favorite before clicking, unfav it...
                     if (isFav) {
@@ -284,7 +290,6 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
 
                         setNotFavProperties(this);
 
-                        isFav = false;
 
                     //...otherwise make it favorite
                     } else {
@@ -305,6 +310,14 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
                 } else if (view.getId() == mail.getId()) {
                     Log.d(TAG, "MailButton clicked.");
 
+                    if (!isFav) {
+                        // In case the Kita was not faved, but now status "mail" is set, means that
+                        // the Kita is also faved now. Refresh the ListAdapter already,
+                        // so it will be updated when looking at the list again later
+                        EventBus.getDefault().post(new ListRefreshTrigger());
+                        Log.d(TAG, "LIST REFRESH TRIGGER sent");
+                    }
+
                     setMailProperties(this);
 
                     // set Kita-status to mail-sent
@@ -322,6 +335,14 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
                 //if the clicked-on view == Waiting List Status
                 } else if (view.getId() == waiting.getId()){
                     Log.d(TAG, "WitingListButton clicked.");
+
+                    if (!isFav) {
+                        // In case the Kita was not faved, but now status "waiting" is set, means that
+                        // the Kita is also faved now. Refresh the ListAdapter already,
+                        // so it will be updated when looking at the list again later
+                        EventBus.getDefault().post(new ListRefreshTrigger());
+                        Log.d(TAG, "LIST REFRESH TRIGGER sent");
+                    }
 
                     setWaitingProperties(this);
 
@@ -343,6 +364,15 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
                 } else if (view.getId() == declined.getId()){
                     Log.d(TAG, "DeclinedButton clicked.");
 
+                    if (!isFav) {
+                        // In case the Kita was not faved, but now status "declined" is set, means that
+                        // the Kita is also faved now. Refresh the ListAdapter already,
+                        // so it will be updated when looking at the list again later
+                        EventBus.getDefault().post(new ListRefreshTrigger());
+                        Log.d(TAG, "LIST REFRESH TRIGGER sent");
+                    }
+
+
                     setDeclinedProperties(this);
 
                     // set Kita-status to declined
@@ -362,6 +392,14 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
                 //if the clicked-on view == APPROVED STATUS
                 } else if (view.getId() == approved.getId()){
                     Log.d(TAG, "ApprovedButton clicked.");
+
+                    if (!isFav) {
+                        // In case the Kita was not faved, but now status "approved" is set, means that
+                        // the Kita is also faved now. Refresh the ListAdapter already,
+                        // so it will be updated when looking at the list again later
+                        EventBus.getDefault().post(new ListRefreshTrigger());
+                        Log.d(TAG, "LIST REFRESH TRIGGER sent");
+                    }
 
                     setApprovedProperties(this);
 
@@ -446,6 +484,8 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
 
     private static void setMailProperties(OverviewViewHolder holder){
 
+        holder.favorit.setImageResource(R.drawable.ic_favorite_black_24dp);
+
         holder.favorit.setBackgroundResource(R.drawable.rounded_corner_fav_active);
         holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_active);
         holder.waiting.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
@@ -465,6 +505,8 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
     }
 
     private static void setWaitingProperties(OverviewViewHolder holder){
+
+        holder.favorit.setImageResource(R.drawable.ic_favorite_black_24dp);
 
         holder.favorit.setBackgroundResource(R.drawable.rounded_corner_fav_active);
         holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_active);
@@ -486,6 +528,8 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
 
     private static void setDeclinedProperties(OverviewViewHolder holder){
 
+        holder.favorit.setImageResource(R.drawable.ic_favorite_black_24dp);
+
         holder.favorit.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
         holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
         holder.waiting.setBackgroundResource(R.drawable.rounded_corner_fav_grey);
@@ -505,6 +549,8 @@ public class FavAdapter extends RecyclerViewCursorAdapter<FavAdapter.OverviewVie
     }
 
     private static void setApprovedProperties(OverviewViewHolder holder){
+
+        holder.favorit.setImageResource(R.drawable.ic_favorite_black_24dp);
 
         holder.favorit.setBackgroundResource(R.drawable.rounded_corner_fav_active);
         holder.mail.setBackgroundResource(R.drawable.rounded_corner_fav_active);

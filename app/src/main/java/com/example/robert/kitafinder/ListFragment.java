@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.robert.kitafinder.data.DistancesCalculatedTrigger;
+import com.example.robert.kitafinder.data.ListRefreshTrigger;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -116,6 +117,12 @@ public class ListFragment extends Fragment{
 
     @Subscribe
     public void initRecycleView(DistancesCalculatedTrigger event) {
+        // same effect as before, but different reason to trigger
+        setAdapter();
+    }
+
+    @Subscribe
+    public void reinitRecycleView(ListRefreshTrigger event) {
         // same effect as before, but different reason to trigger
         setAdapter();
     }

@@ -18,6 +18,9 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.example.robert.kitafinder.data.DetailTrigger;
+import com.example.robert.kitafinder.data.DistancesCalculatedTrigger;
+import com.example.robert.kitafinder.data.FavRefreshTrigger;
+import com.example.robert.kitafinder.data.ListRefreshTrigger;
 import com.example.robert.kitafinder.data.MapRefreshTrigger;
 
 import org.greenrobot.eventbus.EventBus;
@@ -116,6 +119,7 @@ public class ResultActivity extends AppCompatActivity {
                 } else if (tab.getPosition() == 1){
                     Log.d(TAG, "tab.getPosition == 1");
                 } else if (tab.getPosition() == 2){
+                    EventBus.getDefault().post(new FavRefreshTrigger());
                     Log.d(TAG, "tab.getPosition == 2");
                 }
             }

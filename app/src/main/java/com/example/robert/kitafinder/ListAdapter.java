@@ -17,6 +17,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.example.robert.kitafinder.data.DetailTrigger;
+import com.example.robert.kitafinder.data.FavRefreshTrigger;
 import com.example.robert.kitafinder.data.KitaContract;
 import com.example.robert.kitafinder.data.KitaProvider;
 
@@ -362,6 +363,10 @@ public class ListAdapter extends RecyclerViewCursorAdapter<ListAdapter.OverviewV
                     favorit.setImageResource(R.drawable.ic_favorite_black_24dp);
                 }
                 listenerRef.get().onPositionClicked(getAdapterPosition(), kitaId);
+//                // In case anything happens on the FAV part,
+//                // refresh the FavAdapter in the background
+//                EventBus.getDefault().post(new FavRefreshTrigger());
+//                Log.d(TAG, "FAV REFRESH TRIGGER sent");
 
             //if the clicked-on view is sth else, it's probably the whole list-item
             } else if (view.getId() == item.getId()){

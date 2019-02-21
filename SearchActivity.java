@@ -132,6 +132,10 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
         if (previouslyStarted) {
             Intent intent = new Intent(this, ResultActivity.class);
             this.startActivity(intent);
+        } elseif (updateDB){
+            new FetchDbFromCsv(this).execute();
+            Log.d(TAG, "FetchDbFromCsv.execute()");
+            updateDB = false;
         }
 
 //        editor.putBoolean(getString(R.string.pref_address_changed_key), true);
@@ -146,11 +150,6 @@ public class SearchActivity extends FragmentActivity implements GoogleApiClient.
                     .addApi(LocationServices.API)
                     .build();
 
-        }
-
-        if (updateDB) {
-            new FetchDbFromCsv(this).execute();
-            Log.d(TAG, "FetchDbFromCsv.execute()");
         }
 
 //        //---- Test query -----
